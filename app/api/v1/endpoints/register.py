@@ -7,6 +7,8 @@ import os
 
 import cv2
 import numpy as np
+import uuid
+
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
 from PIL import Image
@@ -31,12 +33,17 @@ router = APIRouter()
 )
 async def register_face(
     request: Request,
-    emp_id: str = Form(..., description="Employee ID"),
     name: str = Form(..., description="Employee Name"),
+    emp_id: str | None = Form(None, description="Employee ID (Auto-generated UUID if empty)"),
     file: UploadFile = File(..., description="Portrait image of the employee"),
     engine: FaceEngine = Depends(get_face_engine),
     db: FaceDatabase = Depends(get_face_db),
 ) -> JSONResponse:
+    if not emp_id or not emp_id.strip():
+        emp_id = str(uuid.uuid4())
+    else:
+        emp_id = emp_id.strip()
+
     client_ip = request.client.host
     logger.info(
         "[REGISTER] Registration request from IP: %s | ID: '%s' | Name: '%s'", client_ip, emp_id, name

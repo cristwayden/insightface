@@ -16,7 +16,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_v1_router
@@ -123,34 +123,39 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 app.include_router(api_v1_router, prefix="/api/v1")
 
+_static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+
 # ============================================================
-# Static Files (Frontend)  →  /static/...
+# Frontend HTML Routes
 # ============================================================
 
-_static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+@app.get("/", include_in_schema=False)
+async def serve_index():
+    """Serve index.html at root /"""
+    index_file = os.path.join(_static_dir, "index.html")
+    if os.path.isfile(index_file):
+        return FileResponse(index_file)
+    return JSONResponse(status_code=404, content={"status": "error", "detail": "index.html not found"})
+
+
+@app.get("/register", include_in_schema=False)
+async def serve_register_page():
+    """Serve register.html at /register"""
+    reg_file = os.path.join(_static_dir, "register.html")
+    if os.path.isfile(reg_file):
+        return FileResponse(reg_file)
+    return JSONResponse(status_code=404, content={"status": "error", "detail": "register.html not found"})
+
+
+# Mount static assets (styles.css, js files, images...)
 if os.path.isdir(_static_dir):
     app.mount("/static", StaticFiles(directory=_static_dir), name="static")
+    app.mount("/", StaticFiles(directory=_static_dir), name="frontend_assets")
 
 
 # ============================================================
-# Backward-Compatible Routes (keep compatibility with old clients)
+# Backward-Compatible API Routes (POST /recognize, POST /register, GET /logs)
 # ============================================================
-
-@app.get("/", tags=["Health"])
-def health_check():
-    """Check if the server is running."""
-    return {
-        "message": "InsightFace API is running.",
-        "docs": "/docs",
-        "version": "2.0.0",
-        "endpoints": {
-            "recognize": "POST /api/v1/recognize",
-            "register":  "POST /api/v1/register",
-            "logs":      "GET  /api/v1/logs",
-            "frontend":  "GET  /static/index.html",
-        },
-    }
-
 
 @app.post("/recognize", include_in_schema=False)
 async def compat_recognize():
@@ -160,7 +165,7 @@ async def compat_recognize():
 
 @app.post("/register", include_in_schema=False)
 async def compat_register():
-    """Backward-compat: redirect /register → /api/v1/register."""
+    """Backward-compat: redirect POST /register → /api/v1/register."""
     return RedirectResponse(url="/api/v1/register", status_code=307)
 
 
@@ -168,6 +173,7 @@ async def compat_register():
 async def compat_logs():
     """Backward-compat: redirect /logs → /api/v1/logs."""
     return RedirectResponse(url="/api/v1/logs", status_code=307)
+
 
 
 # ============================================================

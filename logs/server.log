@@ -704,3 +704,41 @@
 2026-07-21 14:35:43 | [92mINFO    [0m | InsightFace.main | ============================================================
 2026-07-21 14:35:43 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 5005 | Host: 0.0.0.0
 2026-07-21 14:35:43 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:47:24 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:47:24 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 16:47:24 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:47:24 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 16:47:27 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 16:47:27 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 16:47:30 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 16:47:30 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 16:47:30 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 16:47:30 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:47:30 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 5005 | Host: 0.0.0.0
+2026-07-21 16:47:30 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:50:41 | [92mINFO    [0m | InsightFace.main | Server is shutting down...
+2026-07-21 16:50:43 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:50:43 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 16:50:43 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:50:43 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 16:50:45 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 16:50:45 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 16:50:48 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 16:50:48 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 16:50:48 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 16:50:48 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:50:48 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 5005 | Host: 0.0.0.0
+2026-07-21 16:50:48 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:53:13 | [92mINFO    [0m | InsightFace.main | Server is shutting down...
+2026-07-21 16:53:15 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:53:15 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 16:53:15 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:53:15 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 16:53:17 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 16:53:17 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 16:53:19 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 16:53:19 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 16:53:19 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 16:53:19 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 16:53:19 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 5005 | Host: 0.0.0.0
+2026-07-21 16:53:19 | [92mINFO    [0m | InsightFace.main | ============================================================

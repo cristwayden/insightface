@@ -1,19 +1,20 @@
 """
 app/main.py
-Entry point chính của ứng dụng FastAPI.
+Main entry point of the FastAPI application.
 
-Trách nhiệm:
-  - Khởi tạo FastAPI app với lifespan (load AI model khi startup)
-  - Gắn middleware (CORS)
+Responsibilities:
+  - Initialize the FastAPI app with lifespan (load AI models on startup)
+  - Attach middleware (CORS)
   - Mount static files (Frontend HTML)
   - Include API v1 router
-  - Backward-compat routes cho /recognize, /register, /logs cũ
+  - Backward-compat routes for old /recognize, /register, /logs
 """
 import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -28,43 +29,43 @@ logger = get_logger(__name__)
 
 
 # ============================================================
-# Lifespan: load AI models TRƯỚC khi nhận request đầu tiên
+# Lifespan: load AI models BEFORE receiving the first request
 # ============================================================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / Shutdown lifecycle handler."""
     logger.info("=" * 60)
-    logger.info("INSIGHTFACE API — ĐANG KHỞI ĐỘNG")
+    logger.info("INSIGHTFACE API — STARTING UP")
     logger.info("=" * 60)
 
-    # 1. Khởi tạo AI Engine (load model vào RAM/VRAM)
+    # 1. Initialize AI Engine (load model into RAM/VRAM)
     engine = FaceEngine.get_instance()
     engine.initialize()
 
-    # 2. Khởi tạo Face Database (load hoặc bootstrap từ data/)
+    # 2. Initialize Face Database (load or bootstrap from data/)
     db = FaceDatabase.get_instance()
     db.initialize(face_engine=engine)
 
     logger.info("=" * 60)
-    logger.info("✅ SERVER SẴN SÀNG — Port: %d | Host: %s", settings.APP_PORT, settings.APP_HOST)
+    logger.info("✅ SERVER READY — Port: %d | Host: %s", settings.APP_PORT, settings.APP_HOST)
     logger.info("=" * 60)
 
-    yield  # ← Server đang chạy (nhận request)
+    yield  # ← Server is running (receiving requests)
 
     # Shutdown
-    logger.info("Server đang tắt...")
+    logger.info("Server is shutting down...")
 
 
 # ============================================================
-# Tạo FastAPI App
+# Create FastAPI App
 # ============================================================
 
 app = FastAPI(
     title="InsightFace Recognition API",
     description=(
-        "API nhận diện khuôn mặt tích hợp InsightFace + Anti-Spoofing (MiniFASNet). "
-        "Hỗ trợ đăng ký (register) và nhận diện (recognize) theo thời gian thực."
+        "Face recognition API integrated with InsightFace + Anti-Spoofing (MiniFASNet). "
+        "Supports real-time registration and recognition."
     ),
     version="2.0.0",
     lifespan=lifespan,
@@ -85,6 +86,38 @@ app.add_middleware(
 )
 
 # ============================================================
+# Global Exception Handlers — return consistent JSON
+# ============================================================
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """Normalize all HTTPErrors into a consistent JSON response."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "status": "error",
+            "code": exc.status_code,
+            "detail": exc.detail,
+        },
+        headers=getattr(exc, "headers", None),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    """Return 422 validation errors as standardized JSON."""
+    return JSONResponse(
+        status_code=422,
+        content={
+            "status": "error",
+            "code": 422,
+            "detail": "Invalid input data.",
+            "errors": exc.errors(),
+        },
+    )
+
+
+# ============================================================
 # API Routes v1  →  /api/v1/...
 # ============================================================
 
@@ -100,14 +133,14 @@ if os.path.isdir(_static_dir):
 
 
 # ============================================================
-# Backward-Compatible Routes (giữ tương thích với client cũ)
+# Backward-Compatible Routes (keep compatibility with old clients)
 # ============================================================
 
 @app.get("/", tags=["Health"])
 def health_check():
-    """Kiểm tra server đang chạy."""
+    """Check if the server is running."""
     return {
-        "message": "InsightFace API đang hoạt động.",
+        "message": "InsightFace API is running.",
         "docs": "/docs",
         "version": "2.0.0",
         "endpoints": {
@@ -138,7 +171,7 @@ async def compat_logs():
 
 
 # ============================================================
-# Dev runner (chạy trực tiếp: python -m app.main)
+# Dev runner (run directly: python -m app.main)
 # ============================================================
 
 if __name__ == "__main__":

@@ -1,102 +1,382 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng Ký Khuôn Mặt (Lấy mẫu)</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background-color: #2c3e50; color: white; margin: 0; padding: 20px; }
-        video { width: 100%; max-width: 400px; border-radius: 10px; background: #000; }
-        input { padding: 10px; font-size: 16px; margin: 10px; width: 80%; max-width: 300px; border-radius: 5px; border: none; }
-        button { padding: 15px 30px; font-size: 18px; font-weight: bold; margin-top: 10px; background-color: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        button:disabled { background-color: #7f8c8d; }
-        #result { margin-top: 20px; font-size: 18px; font-weight: bold; }
-        canvas { display: none; }
-        .nav { margin-bottom: 20px; }
-        .nav a { color: #3498db; text-decoration: none; font-size: 18px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsightFace — Registration</title>
+  <meta name="description" content="Register new employee faces into the system" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark:    #0a0e1a;
+      --bg-card:    #111827;
+      --bg-glass:   rgba(255,255,255,0.04);
+      --border:     rgba(255,255,255,0.08);
+      --accent:     #6366f1;
+      --accent-2:   #8b5cf6;
+      --success:    #10b981;
+      --danger:     #ef4444;
+      --warning:    #f59e0b;
+      --text-main:  #f1f5f9;
+      --text-muted: #94a3b8;
+      --radius:     16px;
+      --shadow:     0 25px 50px rgba(0,0,0,0.5);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background blobs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: var(--accent);
+      top: -200px; left: -200px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: var(--accent-2);
+      bottom: -150px; right: -150px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      position: relative; z-index: 1;
+      max-width: 900px; margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 40px; padding: 16px 24px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo-text p { font-size: 12px; color: var(--text-muted); }
+    nav { display: flex; gap: 8px; }
+    .nav-btn {
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .2s; border: 1px solid transparent;
+      text-decoration: none;
+    }
+    .nav-btn.active, .nav-btn:hover {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+    }
+    .nav-btn:not(.active) { color: var(--text-muted); border-color: var(--border); background: var(--bg-glass); }
+
+    /* ── Status pill ── */
+    .status-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 100px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      font-size: 12px; color: var(--text-muted);
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(1.3); }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 18px; font-weight: 700;
+      margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+    }
+
+    /* ── Form Group ── */
+    .form-group {
+      margin-bottom: 24px;
+    }
+    .form-label {
+      display: block; font-size: 14px; font-weight: 600; color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%; padding: 16px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text-main); font-size: 16px;
+      font-family: 'Inter', sans-serif; transition: border-color .2s;
+    }
+    .form-input:focus {
+      outline: none; border-color: var(--accent);
+      background: rgba(255,255,255,0.08);
+    }
+    .form-input::placeholder { color: rgba(255,255,255,0.3); }
+
+    /* ── Camera ── */
+    .camera-wrap {
+      position: relative; width: 100%;
+      aspect-ratio: 4/3; background: #000;
+      border-radius: 12px; overflow: hidden;
+      border: 2px solid var(--border);
+      margin-bottom: 24px;
+    }
+    #video {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block; transform: scaleX(-1);
+    }
+    #canvas { display: none; }
+
+    /* Camera placeholder */
+    .cam-placeholder {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; color: var(--text-muted);
+    }
+    .cam-placeholder-icon { font-size: 48px; opacity: .5; }
+
+    /* Guide Overlay */
+    .guide-overlay {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 50%; height: 60%;
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+      border-radius: 50% 50% 40% 40%;
+      pointer-events: none;
+    }
+
+    /* ── Action Buttons ── */
+    .btn {
+      width: 100%; padding: 16px;
+      border: none; border-radius: 10px; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: all .2s;
+      font-family: 'Inter', sans-serif;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(16,185,129,.4);
+    }
+    .btn-success:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(16,185,129,.5);
+    }
+    .btn-success:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Result Message ── */
+    .result-msg {
+      margin-top: 20px; padding: 16px; border-radius: 10px;
+      font-size: 14px; font-weight: 500; text-align: center;
+      display: none; transition: all 0.3s;
+    }
+    .result-msg.success {
+      display: block; background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: var(--success);
+    }
+    .result-msg.error {
+      display: block; background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: var(--danger);
+    }
+    .result-msg.info {
+      display: block; background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.3); color: #818cf8;
+    }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
+<div class="container">
 
-    <div class="nav">
-        <a href="index.html">⬅ Quay lại Nhận Diện</a>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">👁</div>
+      <div class="logo-text">
+        <h1>InsightFace</h1>
+        <p>Face Registration</p>
+      </div>
+    </div>
+    <nav>
+      <a class="nav-btn" href="index.html" id="nav-recognize">Recognize</a>
+      <a class="nav-btn active" href="register.html" id="nav-register">Register</a>
+    </nav>
+    <div class="status-bar" id="statusBar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="card">
+    <div class="card-title">📝 Register New Face</div>
+    
+    <div class="form-group">
+      <label class="form-label" for="employeeName">Employee Full Name (or ID)</label>
+      <input type="text" id="employeeName" class="form-input" placeholder="Example: EMP_JohnDoe" autocomplete="off" />
     </div>
 
-    <h2>Lấy mẫu (Đăng ký) Khuôn Mặt</h2>
-    <p>Nhập tên nhân viên và nhìn thẳng vào camera để đăng ký.</p>
-    
-    <input type="text" id="employeeName" placeholder="Nhập tên nhân viên..." required>
-    <br>
-    
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-    
-    <br>
-    <button id="registerBtn">Chụp & Đăng Ký</button>
-    
-    <div id="result"></div>
+    <div class="form-label">Portrait Photo</div>
+    <div class="camera-wrap">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas"></canvas>
+      <div class="guide-overlay"></div>
+      <div class="cam-placeholder" id="camPlaceholder">
+        <div class="cam-placeholder-icon">📷</div>
+        <div>Initializing camera...</div>
+      </div>
+    </div>
 
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const registerBtn = document.getElementById('registerBtn');
-        const resultDiv = document.getElementById('result');
-        const nameInput = document.getElementById('employeeName');
+    <button class="btn btn-success" id="registerBtn">
+      <span>📸</span> Capture & Register
+    </button>
 
-        // Bật camera trước
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => { video.srcObject = stream; })
-            .catch(err => { resultDiv.innerText = "Lỗi mở camera: " + err; resultDiv.style.color = "#e74c3c"; });
+    <div id="resultMsg" class="result-msg"></div>
+  </div>
 
-        registerBtn.addEventListener('click', async () => {
-            const name = nameInput.value.trim();
-            if (!name) {
-                alert("Vui lòng nhập tên nhân viên!");
-                return;
-            }
+</div><!-- /container -->
 
-            registerBtn.disabled = true;
-            resultDiv.innerText = "Đang xử lý...";
-            resultDiv.style.color = "#f1c40f";
+<script>
+  const API_BASE = `http://${window.location.hostname || '127.0.0.1'}:8000/api/v1`;
 
-            // Chụp khung hình
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+  const video       = document.getElementById('video');
+  const canvas      = document.getElementById('canvas');
+  const registerBtn = document.getElementById('registerBtn');
+  const nameInput   = document.getElementById('employeeName');
+  const resultMsg   = document.getElementById('resultMsg');
+  const placeholder = document.getElementById('camPlaceholder');
 
-            // Chuyển thành Blob
-            canvas.toBlob(async (blob) => {
-                const formData = new FormData();
-                formData.append('file', blob, 'capture.jpg');
-                formData.append('name', name); // Gửi thêm tên
+  // ── Server health check ──
+  async function checkServer() {
+    try {
+      const r = await fetch(`http://${window.location.hostname || '127.0.0.1'}:8000/`);
+      if (r.ok) {
+        document.getElementById('statusDot').style.background = 'var(--success)';
+        document.getElementById('statusText').textContent = 'Server online';
+      } else throw new Error();
+    } catch {
+      document.getElementById('statusDot').style.background = 'var(--danger)';
+      document.getElementById('statusText').textContent = 'Server offline';
+    }
+  }
+  checkServer();
+  setInterval(checkServer, 10000);
 
-                try {
-                    // API v1 endpoint
-                    const host = window.location.hostname || "127.0.0.1";
-                    const serverUrl = `http://${host}:8000/api/v1/register`;
-                    
-                    const response = await fetch(serverUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        resultDiv.innerText = data.message;
-                        resultDiv.style.color = "#2ecc71";
-                        nameInput.value = ""; // Xóa input sau khi đk thành công
-                    } else {
-                        resultDiv.innerText = "Lỗi: " + data.message;
-                        resultDiv.style.color = "#e74c3c";
-                    }
-                } catch (error) {
-                    resultDiv.innerText = "Lỗi kết nối máy chủ";
-                    resultDiv.style.color = "#e74c3c";
-                }
-                registerBtn.disabled = false;
-            }, 'image/jpeg');
+  // ── Camera ──
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } })
+    .then(stream => {
+      video.srcObject = stream;
+      placeholder.style.display = 'none';
+    })
+    .catch(err => {
+      placeholder.innerHTML = `<div class="cam-placeholder-icon">⚠️</div><div style="color:var(--danger)">Cannot open camera<br><small>${err.message}</small></div>`;
+    });
+
+  // ── Register ──
+  registerBtn.addEventListener('click', async () => {
+    const name = nameInput.value.trim();
+    if (!name) {
+      showResult('error', 'Please enter the employee name or ID!');
+      nameInput.focus();
+      return;
+    }
+
+    if (registerBtn.disabled) return;
+    registerBtn.disabled = true;
+    const originalBtnHtml = registerBtn.innerHTML;
+    registerBtn.innerHTML = '<span class="spinner"></span> Processing...';
+    showResult('info', 'Extracting face features...');
+
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    // Mirror flip for DB image (matching what user sees on UI)
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(async (blob) => {
+      const fd = new FormData();
+      fd.append('file', blob, 'capture.jpg');
+      fd.append('name', name);
+
+      try {
+        const resp = await fetch(`${API_BASE}/register`, {
+          method: 'POST',
+          body: fd,
+          // headers: { 'X-API-Key': 'your-key' },
         });
-    </script>
+
+        const data = await resp.json();
+
+        if (resp.ok && data.status === 'success') {
+          showResult('success', `✅ ${data.message}`);
+          nameInput.value = ''; // Reset input
+        } else {
+          showResult('error', `❌ Error: ${data.detail?.message || data.message || 'Unknown error'}`);
+        }
+
+      } catch (err) {
+        showResult('error', '❌ Cannot connect to server. Please check the server status.');
+      }
+
+      registerBtn.disabled = false;
+      registerBtn.innerHTML = originalBtnHtml;
+    }, 'image/jpeg', 0.95);
+  });
+
+  // ── Helpers ──
+  function showResult(type, msg) {
+    resultMsg.className = `result-msg ${type}`;
+    resultMsg.innerHTML = escHtml(msg);
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  
+  // Enter to submit
+  nameInput.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      registerBtn.click();
+    }
+  });
+</script>
 </body>
 </html>

@@ -1,11 +1,11 @@
 """
 app/core/config.py
-Đọc cấu hình từ file .env thông qua pydantic-settings.
+Read configuration from .env file using pydantic-settings.
 """
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
-# Thư mục gốc của project (thư mục chứa app/)
+# Project root directory (directory containing app/)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
@@ -40,8 +40,9 @@ class Settings(BaseSettings):
     DET_SIZE: int = 640  # Detection size (square)
 
     # --- Security (optional) ---
-    API_KEY: str = ""  # Để trống = không bắt xác thực
+    API_KEY: str = ""                          # Leave empty = no authentication (dev mode)
+    API_KEY_HEADER_NAME: str = "X-API-Key"    # HTTP header name for API Key
 
 
-# Singleton instance — import trực tiếp từ module này
+# Singleton instance — import directly from this module
 settings = Settings()

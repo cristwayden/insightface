@@ -1,6 +1,6 @@
 """
 app/api/v1/endpoints/recognize.py
-POST /api/v1/recognize — Nhận diện khuôn mặt trong ảnh upload.
+POST /api/v1/recognize — Recognizes faces in an uploaded image.
 """
 import io
 from datetime import datetime
@@ -24,29 +24,29 @@ router = APIRouter()
 @router.post(
     "/recognize",
     response_model=RecognizeResponse,
-    summary="Nhận diện khuôn mặt",
-    description="Upload một ảnh, trả về danh sách khuôn mặt được nhận diện kèm kết quả Anti-Spoofing.",
+    summary="Recognize faces",
+    description="Upload an image, returns a list of recognized faces with Anti-Spoofing results.",
 )
 async def recognize_face(
     request: Request,
-    file: UploadFile = File(..., description="Ảnh chứa khuôn mặt cần nhận diện"),
+    file: UploadFile = File(..., description="Image containing faces to recognize"),
     engine: FaceEngine = Depends(get_face_engine),
     db: FaceDatabase = Depends(get_face_db),
 ) -> JSONResponse:
     client_ip = request.client.host
     start_time = datetime.now()
-    logger.info("[RECOGNIZE] Yêu cầu từ IP: %s | File: %s", client_ip, file.filename)
+    logger.info("[RECOGNIZE] Request from IP: %s | File: %s", client_ip, file.filename)
 
     try:
-        # --- Đọc & decode ảnh ---
+        # --- Read & decode image ---
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         img_np = np.array(image)
-        img_bgr = img_np[:, :, ::-1].copy()  # RGB → BGR cho OpenCV / InsightFace
+        img_bgr = img_np[:, :, ::-1].copy()  # RGB -> BGR for OpenCV / InsightFace
 
-        # --- Phát hiện & embedding ---
+        # --- Detection & embedding ---
         faces = engine.get_faces(img_bgr)
-        logger.debug("[RECOGNIZE] Phát hiện %d khuôn mặt.", len(faces))
+        logger.debug("[RECOGNIZE] Detected %d faces.", len(faces))
 
         results: list[FaceResult] = []
         for face in faces:
@@ -78,10 +78,10 @@ async def recognize_face(
             )
 
         if not faces:
-            logger.info("[RECOGNIZE] IP: %s | Không tìm thấy khuôn mặt.", client_ip)
+            logger.info("[RECOGNIZE] IP: %s | No faces found.", client_ip)
 
         elapsed = (datetime.now() - start_time).total_seconds()
-        logger.debug("[RECOGNIZE] Hoàn thành trong %.3fs", elapsed)
+        logger.debug("[RECOGNIZE] Completed in %.3fs", elapsed)
 
         return JSONResponse(
             content=RecognizeResponse(status="success", faces=results).model_dump()
@@ -89,7 +89,7 @@ async def recognize_face(
 
     except Exception as exc:
         logger.error(
-            "[RECOGNIZE] LỖI từ IP %s: %s", client_ip, str(exc), exc_info=True
+            "[RECOGNIZE] ERROR from IP %s: %s", client_ip, str(exc), exc_info=True
         )
         return JSONResponse(
             content={"status": "error", "message": str(exc)},

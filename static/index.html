@@ -1,94 +1,658 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nhận Diện Khuôn Mặt (Web Test)</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background-color: #222; color: white; margin: 0; padding: 20px; }
-        video { width: 100%; max-width: 400px; border-radius: 10px; background: #000; }
-        button { padding: 15px 30px; font-size: 18px; font-weight: bold; margin-top: 20px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        button:disabled { background-color: #555; }
-        #result { margin-top: 20px; font-size: 20px; font-weight: bold; color: #00ff00; }
-        canvas { display: none; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsightFace — Face Recognition</title>
+  <meta name="description" content="Real-time face recognition system integrated with Anti-Spoofing" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark:    #0a0e1a;
+      --bg-card:    #111827;
+      --bg-glass:   rgba(255,255,255,0.04);
+      --border:     rgba(255,255,255,0.08);
+      --accent:     #6366f1;
+      --accent-2:   #8b5cf6;
+      --success:    #10b981;
+      --danger:     #ef4444;
+      --warning:    #f59e0b;
+      --text-main:  #f1f5f9;
+      --text-muted: #94a3b8;
+      --radius:     16px;
+      --shadow:     0 25px 50px rgba(0,0,0,0.5);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background blobs ── */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: var(--accent);
+      top: -200px; left: -200px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: var(--accent-2);
+      bottom: -150px; right: -150px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      position: relative; z-index: 1;
+      max-width: 1100px; margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 40px; padding: 16px 24px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .logo-text p { font-size: 12px; color: var(--text-muted); }
+    nav { display: flex; gap: 8px; }
+    .nav-btn {
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .2s; border: 1px solid transparent;
+      text-decoration: none;
+    }
+    .nav-btn.active, .nav-btn:hover {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+    }
+    .nav-btn:not(.active) { color: var(--text-muted); border-color: var(--border); background: var(--bg-glass); }
+
+    /* ── Status pill ── */
+    .status-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 100px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      font-size: 12px; color: var(--text-muted);
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(1.3); }
+    }
+
+    /* ── Grid ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+    }
+    @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── Camera ── */
+    .camera-wrap {
+      position: relative; width: 100%;
+      aspect-ratio: 4/3; background: #000;
+      border-radius: 12px; overflow: hidden;
+      border: 2px solid var(--border);
+    }
+    #video {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block; transform: scaleX(-1); /* mirror */
+    }
+    #canvas { display: none; }
+
+    /* Face overlay */
+    .face-overlay {
+      position: absolute; inset: 0; pointer-events: none;
+    }
+    #faceBox {
+      position: absolute;
+      border: 2px solid var(--success);
+      border-radius: 8px;
+      box-shadow: 0 0 0 1px rgba(16,185,129,.3), 0 0 20px rgba(16,185,129,.2);
+      transition: all .15s;
+      display: none;
+    }
+    #faceLabel {
+      position: absolute;
+      top: -30px; left: 0;
+      background: var(--success);
+      color: #fff; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* Camera placeholder */
+    .cam-placeholder {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; color: var(--text-muted);
+    }
+    .cam-placeholder-icon { font-size: 48px; opacity: .5; }
+
+    /* ── Scan button ── */
+    .btn {
+      width: 100%; padding: 14px;
+      border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all .2s; margin-top: 16px;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(99,102,241,.4);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(99,102,241,.5);
+    }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* Auto-scan toggle */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 14px; padding: 12px 16px;
+      background: var(--bg-glass); border-radius: 10px; border: 1px solid var(--border);
+    }
+    .toggle-label { font-size: 13px; font-weight: 500; }
+    .toggle-sub { font-size: 11px; color: var(--text-muted); }
+    .toggle {
+      position: relative; width: 44px; height: 24px;
+      background: var(--border); border-radius: 12px; cursor: pointer;
+      transition: background .2s;
+    }
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: '';
+      position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px;
+      background: #fff; border-radius: 50%;
+      transition: left .2s;
+    }
+    .toggle.on::after { left: 23px; }
+
+    /* ── Result panel ── */
+    .result-panel { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Identity card */
+    .identity-card {
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+      transition: all .3s;
+    }
+    .identity-card.success { border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.05); }
+    .identity-card.danger  { border-color: rgba(239,68,68,.4);  background: rgba(239,68,68,.05); }
+
+    .identity-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      margin: 0 auto 12px;
+    }
+    .identity-name { font-size: 22px; font-weight: 700; text-align: center; }
+    .identity-sub  { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 4px; }
+
+    /* Metrics */
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+    .metric {
+      background: var(--bg-glass); border-radius: 8px; padding: 12px;
+      border: 1px solid var(--border);
+    }
+    .metric-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; }
+    .metric-value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+
+    /* Progress bar */
+    .progress-bar {
+      height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .5s;
+    }
+
+    /* Liveness badge */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 100px; font-size: 12px; font-weight: 700;
+      margin-top: 10px;
+    }
+    .badge-real    { background: rgba(16,185,129,.15); color: var(--success); border: 1px solid rgba(16,185,129,.3); }
+    .badge-fake    { background: rgba(239,68,68,.15);  color: var(--danger);  border: 1px solid rgba(239,68,68,.3); }
+    .badge-waiting { background: rgba(148,163,184,.1); color: var(--text-muted); border: 1px solid var(--border); }
+
+    /* ── History log ── */
+    .history { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .history::-webkit-scrollbar { width: 4px; }
+    .history::-webkit-scrollbar-track { background: transparent; }
+    .history::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .log-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      background: var(--bg-glass); border: 1px solid var(--border);
+      font-size: 12px; animation: slideIn .3s;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .log-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .log-dot.ok   { background: var(--success); }
+    .log-dot.fail { background: var(--danger); }
+    .log-dot.warn { background: var(--warning); }
+    .log-name { font-weight: 600; flex: 1; }
+    .log-time { color: var(--text-muted); font-size: 10px; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle; margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Stats row ── */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+      text-align: center;
+    }
+    .stat-value { font-size: 28px; font-weight: 800; }
+    .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .8px; margin-top: 4px; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center; padding: 40px 20px; color: var(--text-muted);
+    }
+    .empty-icon { font-size: 40px; opacity: .3; margin-bottom: 12px; }
+    .empty-text { font-size: 13px; }
+  </style>
 </head>
 <body>
+<div class="container">
 
-    <div style="margin-bottom: 20px;">
-        <a href="register.html" style="color: #3498db; text-decoration: none; font-size: 18px;">➡ Đi tới trang Lấy Mẫu (Đăng ký)</a>
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">👁</div>
+      <div class="logo-text">
+        <h1>InsightFace</h1>
+        <p>Face Recognition System v2.0</p>
+      </div>
     </div>
-    <h2>Máy quét khuôn mặt</h2>
-    
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas"></canvas>
-    
-    <br>
-    <button id="scanBtn">Quét Khuôn Mặt</button>
-    
-    <div id="result">Chưa nhận diện</div>
+    <nav>
+      <a class="nav-btn active" href="index.html" id="nav-recognize">Recognize</a>
+      <a class="nav-btn" href="register.html" id="nav-register">Register</a>
+    </nav>
+    <div class="status-bar" id="statusBar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </header>
 
-    <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const scanBtn = document.getElementById('scanBtn');
-        const resultDiv = document.getElementById('result');
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">Total Scans</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--success)" id="statMatch">0</div>
+      <div class="stat-label">Successful Matches</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--danger)" id="statFake">0</div>
+      <div class="stat-label">Spoofs Detected</div>
+    </div>
+  </div>
 
-        // Bật camera trước
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => { video.srcObject = stream; })
-            .catch(err => { resultDiv.innerText = "Lỗi mở camera: " + err; resultDiv.style.color = "red"; });
+  <!-- Main grid -->
+  <div class="main-grid">
 
-        scanBtn.addEventListener('click', async () => {
-            scanBtn.disabled = true;
-            resultDiv.innerText = "Đang xử lý...";
-            resultDiv.style.color = "yellow";
+    <!-- Left: Camera -->
+    <div>
+      <div class="card">
+        <div class="card-title">📷 Camera</div>
+        <div class="camera-wrap">
+          <video id="video" autoplay playsinline></video>
+          <canvas id="canvas"></canvas>
+          <div class="face-overlay">
+            <div id="faceBox"><div id="faceLabel"></div></div>
+          </div>
+          <div class="cam-placeholder" id="camPlaceholder">
+            <div class="cam-placeholder-icon">📷</div>
+            <div>Initializing camera...</div>
+          </div>
+        </div>
 
-            // Chụp khung hình từ video vào canvas
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+        <button class="btn btn-primary" id="scanBtn">
+          Scan Face
+        </button>
 
-            // Chuyển ảnh thành file blob (JPEG)
-            canvas.toBlob(async (blob) => {
-                const formData = new FormData();
-                formData.append('file', blob, 'capture.jpg');
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Auto-scan</div>
+            <div class="toggle-sub">Scan continuously every 2 seconds</div>
+          </div>
+          <div class="toggle" id="autoToggle" onclick="toggleAuto()"></div>
+        </div>
+      </div>
+    </div>
 
-                try {
-                    // API v1 endpoint
-                    const host = window.location.hostname || "127.0.0.1";
-                    const serverUrl = `http://${host}:8000/api/v1/recognize`;
-                    
-                    const response = await fetch(serverUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success' && data.faces.length > 0) {
-                        const face = data.faces[0];
-                        if (face.is_real) {
-                            resultDiv.innerText = `${face.name} (Người thật - Khớp: ${face.score.toFixed(2)}, Sống: ${face.liveness_score.toFixed(2)})`;
-                            resultDiv.style.color = "#00ff00"; // Xanh
-                        } else {
-                            resultDiv.innerText = `CẢNH BÁO GIẢ MẠO! ${face.name} (Khớp: ${face.score.toFixed(2)}, Sống: ${face.liveness_score.toFixed(2)})`;
-                            resultDiv.style.color = "red"; // Đỏ
-                        }
-                    } else if (data.status === 'success' && data.faces.length === 0) {
-                        resultDiv.innerText = "Không tìm thấy khuôn mặt";
-                        resultDiv.style.color = "orange";
-                    } else {
-                        resultDiv.innerText = "Lỗi API: " + data.message;
-                        resultDiv.style.color = "red";
-                    }
-                } catch (error) {
-                    resultDiv.innerText = "Lỗi kết nối máy chủ";
-                    resultDiv.style.color = "red";
-                }
-                scanBtn.disabled = false;
-            }, 'image/jpeg');
+    <!-- Right: Results -->
+    <div class="result-panel">
+
+      <!-- Identity -->
+      <div class="card">
+        <div class="card-title">🪪 Recognition Result</div>
+        <div class="identity-card" id="identityCard">
+          <div class="empty-state">
+            <div class="empty-icon">👤</div>
+            <div class="empty-text">Click "Scan Face"<br>to start recognition</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <div class="card-title">📋 Scan History
+          <span style="margin-left:auto;font-size:11px;font-weight:400;cursor:pointer;color:var(--text-muted)" onclick="clearHistory()">Clear</span>
+        </div>
+        <div class="history" id="history">
+          <div class="empty-state" style="padding:20px">
+            <div class="empty-icon" style="font-size:24px">📋</div>
+            <div class="empty-text">No history yet</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /main-grid -->
+</div><!-- /container -->
+
+<script>
+  const API_BASE = `http://${window.location.hostname || '127.0.0.1'}:8000/api/v1`;
+
+  const video       = document.getElementById('video');
+  const canvas      = document.getElementById('canvas');
+  const scanBtn     = document.getElementById('scanBtn');
+  const identityEl  = document.getElementById('identityCard');
+  const historyEl   = document.getElementById('history');
+  const faceBox     = document.getElementById('faceBox');
+  const faceLabel   = document.getElementById('faceLabel');
+  const placeholder = document.getElementById('camPlaceholder');
+  const autoToggle  = document.getElementById('autoToggle');
+
+  let autoMode = false;
+  let autoTimer = null;
+  let stats = { total: 0, match: 0, fake: 0 };
+  let historyItems = [];
+
+  // ── Server health check ──
+  async function checkServer() {
+    try {
+      const r = await fetch(`http://${window.location.hostname || '127.0.0.1'}:8000/`);
+      if (r.ok) {
+        document.getElementById('statusDot').style.background = 'var(--success)';
+        document.getElementById('statusText').textContent = 'Server online';
+      } else throw new Error();
+    } catch {
+      document.getElementById('statusDot').style.background = 'var(--danger)';
+      document.getElementById('statusText').textContent = 'Server offline';
+    }
+  }
+  checkServer();
+  setInterval(checkServer, 10000);
+
+  // ── Camera ──
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } })
+    .then(stream => {
+      video.srcObject = stream;
+      placeholder.style.display = 'none';
+    })
+    .catch(err => {
+      placeholder.innerHTML = `<div class="cam-placeholder-icon">⚠️</div><div style="color:var(--danger)">Cannot open camera<br><small>${err.message}</small></div>`;
+    });
+
+  // ── Auto-scan toggle ──
+  function toggleAuto() {
+    autoMode = !autoMode;
+    autoToggle.classList.toggle('on', autoMode);
+    if (autoMode) {
+      autoTimer = setInterval(doScan, 2000);
+    } else {
+      clearInterval(autoTimer);
+    }
+  }
+
+  // ── Clear history ──
+  function clearHistory() {
+    historyItems = [];
+    renderHistory();
+  }
+
+  // ── Scan ──
+  scanBtn.addEventListener('click', doScan);
+
+  async function doScan() {
+    if (scanBtn.disabled) return;
+    scanBtn.disabled = true;
+    scanBtn.innerHTML = '<span class="spinner"></span>Processing...';
+
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    // Mirror flip for canvas (same as video CSS transform)
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0);
+
+    canvas.toBlob(async (blob) => {
+      const fd = new FormData();
+      fd.append('file', blob, 'capture.jpg');
+
+      try {
+        const resp = await fetch(`${API_BASE}/recognize`, {
+          method: 'POST',
+          body: fd,
+          // API_KEY header (not needed in dev mode)
+          // headers: { 'X-API-Key': 'your-key' },
         });
-    </script>
+
+        const data = await resp.json();
+        stats.total++;
+        updateStats();
+
+        if (data.status === 'success' && data.faces && data.faces.length > 0) {
+          const face = data.faces[0];
+          renderResult(face);
+          addHistory(face);
+          if (!face.is_real) stats.fake++;
+          else stats.match++;
+          updateStats();
+        } else if (data.status === 'success') {
+          renderNoFace();
+          addHistory(null);
+        } else {
+          renderError(data.detail?.message || data.message || 'Unknown error');
+        }
+
+      } catch (err) {
+        renderError('Cannot connect to server. Check if the server is running.');
+      }
+
+      scanBtn.disabled = false;
+      scanBtn.innerHTML = 'Scan Face';
+    }, 'image/jpeg', 0.92);
+  }
+
+  // ── Render result ──
+  function renderResult(face) {
+    const pct   = Math.round(face.score * 100);
+    const lvPct = Math.round(face.liveness_score * 100);
+    const isReal = face.is_real;
+    const cls    = isReal ? 'success' : 'danger';
+    const emoji  = isReal ? '✅' : '⚠️';
+    const badge  = isReal
+      ? '<span class="badge badge-real">🟢 Real Person</span>'
+      : '<span class="badge badge-fake">🔴 SPOOFING DETECTED</span>';
+
+    identityEl.className = `identity-card ${cls}`;
+    identityEl.innerHTML = `
+      <div class="identity-avatar">${emoji}</div>
+      <div class="identity-name">${escHtml(face.name)}</div>
+      <div class="identity-sub">Recognized at ${now()}</div>
+      ${badge}
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Match Score</div>
+          <div class="metric-value" style="color:${pct>=60?'var(--success)':'var(--warning)'}">${pct}%</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Liveness</div>
+          <div class="metric-value" style="color:${isReal?'var(--success)':'var(--danger)'}">${lvPct}%</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${lvPct}%;background:${isReal?'var(--success)':'var(--danger)'}"></div></div>
+        </div>
+      </div>
+    `;
+
+    // Fake box position (center of video)
+    showFaceBox(face.name, isReal);
+  }
+
+  function renderNoFace() {
+    identityEl.className = 'identity-card';
+    identityEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <div class="empty-text">No face detected in the image<br><small style="color:var(--text-muted)">At ${now()}</small></div>
+      </div>`;
+    hideFaceBox();
+  }
+
+  function renderError(msg) {
+    identityEl.className = 'identity-card danger';
+    identityEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">❌</div>
+        <div class="empty-text" style="color:var(--danger)">${escHtml(msg)}</div>
+      </div>`;
+    hideFaceBox();
+  }
+
+  // ── Face box overlay ──
+  function showFaceBox(name, isReal) {
+    faceBox.style.display = 'block';
+    faceBox.style.border  = `2px solid ${isReal ? 'var(--success)' : 'var(--danger)'}`;
+    faceLabel.textContent = name;
+    faceLabel.style.background = isReal ? 'var(--success)' : 'var(--danger)';
+
+    // Simple centered box (real bbox would require canvas overlay)
+    const w = video.offsetWidth, h = video.offsetHeight;
+    const bw = Math.round(w * .35), bh = Math.round(h * .5);
+    faceBox.style.left   = `${Math.round((w-bw)/2)}px`;
+    faceBox.style.top    = `${Math.round((h-bh)/2)}px`;
+    faceBox.style.width  = `${bw}px`;
+    faceBox.style.height = `${bh}px`;
+
+    setTimeout(hideFaceBox, 3000);
+  }
+  function hideFaceBox() { faceBox.style.display = 'none'; }
+
+  // ── History ──
+  function addHistory(face) {
+    const item = face
+      ? { name: face.name, real: face.is_real, score: face.score, time: now() }
+      : { name: 'Not found', real: null, score: 0, time: now() };
+    historyItems.unshift(item);
+    if (historyItems.length > 30) historyItems.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!historyItems.length) {
+      historyEl.innerHTML = `<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:24px">📋</div><div class="empty-text">No history yet</div></div>`;
+      return;
+    }
+    historyEl.innerHTML = historyItems.map(h => {
+      const dotCls = h.real === null ? 'warn' : h.real ? 'ok' : 'fail';
+      const pct    = Math.round(h.score * 100);
+      return `
+        <div class="log-item">
+          <div class="log-dot ${dotCls}"></div>
+          <div class="log-name">${escHtml(h.name)}</div>
+          ${h.real !== null ? `<span style="font-size:11px;color:var(--text-muted)">${pct}%</span>` : ''}
+          <div class="log-time">${h.time}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Stats ──
+  function updateStats() {
+    document.getElementById('statTotal').textContent = stats.total;
+    document.getElementById('statMatch').textContent = stats.match;
+    document.getElementById('statFake').textContent  = stats.fake;
+  }
+
+  // ── Utils ──
+  function now() {
+    return new Date().toLocaleTimeString('en-US', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
 </body>
 </html>

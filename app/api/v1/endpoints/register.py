@@ -1,6 +1,6 @@
 """
 app/api/v1/endpoints/register.py
-POST /api/v1/register — Đăng ký khuôn mặt mới vào hệ thống.
+POST /api/v1/register — Registers a new face into the system.
 """
 import io
 import os
@@ -26,65 +26,81 @@ router = APIRouter()
 @router.post(
     "/register",
     response_model=RegisterResponse,
-    summary="Đăng ký khuôn mặt",
-    description="Upload ảnh kèm tên nhân viên để đăng ký vào hệ thống nhận diện.",
+    summary="Register face",
+    description="Upload a portrait image along with the employee's name to register them in the recognition system.",
 )
 async def register_face(
     request: Request,
-    name: str = Form(..., description="Tên nhân viên cần đăng ký"),
-    file: UploadFile = File(..., description="Ảnh chân dung nhân viên"),
+    name: str = Form(..., description="Employee ID or name to register"),
+    file: UploadFile = File(..., description="Portrait image of the employee"),
     engine: FaceEngine = Depends(get_face_engine),
     db: FaceDatabase = Depends(get_face_db),
 ) -> JSONResponse:
     client_ip = request.client.host
     logger.info(
-        "[REGISTER] Yêu cầu đăng ký từ IP: %s | Tên: '%s'", client_ip, name
+        "[REGISTER] Registration request from IP: %s | Name: '%s'", client_ip, name
     )
 
     try:
-        # --- Đọc & decode ảnh ---
+        # --- Read & decode image ---
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
         img_np = np.array(image)
         img_bgr = img_np[:, :, ::-1].copy()
 
-        # --- Phát hiện khuôn mặt ---
+        # --- Detect faces ---
         faces = engine.get_faces(img_bgr)
         if not faces:
             logger.warning(
-                "[REGISTER] IP: %s | Tên: '%s' | THẤT BẠI: không phát hiện khuôn mặt.",
+                "[REGISTER] IP: %s | Name: '%s' | FAILED: No face detected.",
                 client_ip, name,
             )
             return JSONResponse(
                 content=RegisterResponse(
                     status="error",
-                    message="Không tìm thấy khuôn mặt trong ảnh. Vui lòng chụp lại.",
+                    message="No face detected in the image. Please retake the photo.",
                 ).model_dump()
             )
 
-        # --- Lưu embedding vào DB ---
+        # --- Check if face already exists ---
         embedding = faces[0].embedding
+        matched_name, score = db.match_face(embedding)
+        
+        if matched_name != "Stranger" and matched_name != name:
+            logger.warning(
+                "[REGISTER] IP: %s | Name: '%s' | FAILED: Face matches '%s' (Score: %.4f).",
+                client_ip, name, matched_name, score
+            )
+            return JSONResponse(
+                content=RegisterResponse(
+                    status="error",
+                    message=f"This face is already registered under the name '{matched_name}'. You cannot register it under a different name.",
+                ).model_dump(),
+                status_code=400,
+            )
+
+        # --- Save embedding to DB ---
         total = db.add_face(name, embedding)
 
-        # --- Lưu ảnh gốc vào data/ để backup ---
+        # --- Save original image to data/ for backup ---
         os.makedirs(settings.DATA_DIR, exist_ok=True)
         save_path = os.path.join(settings.DATA_DIR, f"{name}.jpg")
         cv2.imwrite(save_path, img_bgr)
 
         logger.info(
-            "[REGISTER] ✅ Đăng ký thành công | Tên: '%s' | IP: %s | Tổng DB: %d người.",
+            "[REGISTER] ✅ Registration successful | Name: '%s' | IP: %s | Total DB: %d people.",
             name, client_ip, total,
         )
         return JSONResponse(
             content=RegisterResponse(
                 status="success",
-                message=f"Đăng ký thành công: {name}",
+                message=f"Registration successful: {name}",
             ).model_dump()
         )
 
     except Exception as exc:
         logger.error(
-            "[REGISTER] LỖI từ IP %s | Tên: '%s' | %s",
+            "[REGISTER] ERROR from IP %s | Name: '%s' | %s",
             client_ip, name, str(exc), exc_info=True,
         )
         return JSONResponse(

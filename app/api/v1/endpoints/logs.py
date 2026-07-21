@@ -1,6 +1,6 @@
 """
 app/api/v1/endpoints/logs.py
-GET /api/v1/logs — Trả về các dòng log gần nhất từ file log.
+GET /api/v1/logs — Returns the most recent lines from the server log file.
 """
 import os
 
@@ -16,11 +16,11 @@ router = APIRouter()
 
 @router.get(
     "/logs",
-    summary="Xem log gần đây",
-    description="Trả về N dòng log cuối cùng từ file log của server.",
+    summary="View recent logs",
+    description="Returns the last N lines from the server log file.",
 )
 def get_logs(
-    lines: int = Query(default=100, ge=1, le=5000, description="Số dòng log muốn xem"),
+    lines: int = Query(default=100, ge=1, le=5000, description="Number of log lines to view"),
 ) -> JSONResponse:
     log_file = get_log_file_path()
 
@@ -41,7 +41,7 @@ def get_logs(
             }
         )
     except Exception as exc:
-        logger.error("[LOGS] Lỗi đọc file log: %s", str(exc))
+        logger.error("[LOGS] Error reading log file: %s", str(exc))
         return JSONResponse(
             content={"status": "error", "message": str(exc)},
             status_code=500,

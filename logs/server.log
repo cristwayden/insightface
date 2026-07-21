@@ -578,3 +578,92 @@
 2026-07-21 11:39:39 | INFO     | InsightFace.app.main | ============================================================
 2026-07-21 11:39:39 | INFO     | InsightFace.app.main | ✅ SERVER READY — Port: 8000 | Host: 0.0.0.0
 2026-07-21 11:39:39 | INFO     | InsightFace.app.main | ============================================================
+2026-07-21 11:49:33 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:49:33 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 11:49:33 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:49:33 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 11:49:35 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 11:49:35 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 11:49:37 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 11:49:37 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 11:49:37 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 11:49:37 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:49:37 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 8000 | Host: 0.0.0.0
+2026-07-21 11:49:37 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:56:29 | [92mINFO    [0m | InsightFace.main | Server is shutting down...
+2026-07-21 11:56:31 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:56:31 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 11:56:31 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:56:31 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 11:56:33 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 11:56:33 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 11:56:35 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 11:56:35 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 11:56:35 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 11:56:35 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:56:35 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 8000 | Host: 0.0.0.0
+2026-07-21 11:56:35 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:10 | [92mINFO    [0m | InsightFace.main | Server is shutting down...
+2026-07-21 11:57:12 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:12 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 11:57:12 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:12 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 11:57:14 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 11:57:14 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 11:57:16 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 11:57:16 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 11:57:16 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 11:57:16 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:16 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 8000 | Host: 0.0.0.0
+2026-07-21 11:57:16 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:45 | [92mINFO    [0m | InsightFace.main | Server is shutting down...
+2026-07-21 11:57:46 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:46 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 11:57:46 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:46 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 11:57:48 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 11:57:48 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 11:57:51 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 11:57:51 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 11:57:51 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 11:57:51 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:57:51 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 8000 | Host: 0.0.0.0
+2026-07-21 11:57:51 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:58:17 | [92mINFO    [0m | InsightFace.main | Server is shutting down...
+2026-07-21 11:58:20 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:58:20 | [92mINFO    [0m | InsightFace.main | INSIGHTFACE API — STARTING UP
+2026-07-21 11:58:20 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:58:20 | [92mINFO    [0m | InsightFace.face_engine | Loading InsightFace model 'buffalo_l'...
+2026-07-21 11:58:22 | [92mINFO    [0m | InsightFace.face_engine | ✅ InsightFace model loaded.
+2026-07-21 11:58:22 | [92mINFO    [0m | InsightFace.face_engine | Loading Anti-Spoofing model...
+2026-07-21 11:58:25 | [92mINFO    [0m | InsightFace.face_engine | ✅ Anti-Spoofing model loaded.
+2026-07-21 11:58:25 | [92mINFO    [0m | InsightFace.face_engine | ✅ FaceEngine initialization complete.
+2026-07-21 11:58:25 | [92mINFO    [0m | InsightFace.db_service | ✅ Loaded 8 faces from database: data/database.json
+2026-07-21 11:58:25 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:58:25 | [92mINFO    [0m | InsightFace.main | ✅ SERVER READY — Port: 8000 | Host: 0.0.0.0
+2026-07-21 11:58:25 | [92mINFO    [0m | InsightFace.main | ============================================================
+2026-07-21 11:59:29 | [93mWARNING [0m | InsightFace.security | ⚠  [SECURITY] DEVELOPMENT MODE — API Key authentication is DISABLED. Set API_KEY in .env before deploying to production!
+2026-07-21 11:59:29 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] Request from IP: 127.0.0.1 | File: capture.jpg
+2026-07-21 11:59:30 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Detected 1 faces.
+2026-07-21 11:59:31 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: LOC | Name: LOC | Match: 0.7603 | Liveness: 0.8513 | REAL
+2026-07-21 11:59:31 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Completed in 1.763s
+2026-07-21 11:59:33 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] Request from IP: 127.0.0.1 | File: capture.jpg
+2026-07-21 11:59:34 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Detected 1 faces.
+2026-07-21 11:59:34 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: LOC | Name: LOC | Match: 0.7516 | Liveness: 0.7339 | REAL
+2026-07-21 11:59:34 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Completed in 0.783s
+2026-07-21 11:59:35 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] Request from IP: 127.0.0.1 | File: capture.jpg
+2026-07-21 11:59:35 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Detected 1 faces.
+2026-07-21 11:59:35 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: LOC | Name: LOC | Match: 0.7459 | Liveness: 0.8634 | REAL
+2026-07-21 11:59:35 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Completed in 0.679s
+2026-07-21 11:59:36 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] Request from IP: 127.0.0.1 | File: capture.jpg
+2026-07-21 11:59:37 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Detected 1 faces.
+2026-07-21 11:59:37 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: LOC | Name: LOC | Match: 0.7636 | Liveness: 0.7569 | REAL
+2026-07-21 11:59:37 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Completed in 0.788s
+2026-07-21 11:59:38 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] Request from IP: 127.0.0.1 | File: capture.jpg
+2026-07-21 11:59:38 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Detected 1 faces.
+2026-07-21 11:59:38 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: LOC | Name: LOC | Match: 0.7599 | Liveness: 0.5822 | REAL
+2026-07-21 11:59:38 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Completed in 0.775s
+2026-07-21 11:59:39 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] Request from IP: 127.0.0.1 | File: capture.jpg
+2026-07-21 11:59:40 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Detected 1 faces.
+2026-07-21 11:59:40 | [92mINFO    [0m | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: LOC | Name: LOC | Match: 0.7882 | Liveness: 0.8758 | REAL
+2026-07-21 11:59:40 | [94mDEBUG   [0m | InsightFace.recognize | [RECOGNIZE] Completed in 0.784s

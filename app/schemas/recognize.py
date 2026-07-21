@@ -8,6 +8,7 @@ from typing import List
 
 class FaceResult(BaseModel):
     """Kết quả nhận diện cho một khuôn mặt."""
+    emp_id: str | None = Field(default=None, description="Employee ID")
     name: str = Field(..., description="Tên người được nhận diện, hoặc 'Stranger'")
     score: float = Field(..., ge=0.0, le=1.0, description="Điểm tương đồng cosine (0–1)")
     bbox: List[int] = Field(..., description="Bounding box [x1, y1, x2, y2]")

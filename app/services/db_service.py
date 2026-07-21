@@ -28,6 +28,7 @@ class FaceDatabase:
     _instance: "FaceDatabase | None" = None
 
     def __init__(self) -> None:
+        self._emp_ids: list[str] = []
         self._names: list[str] = []
         self._embeddings: list[np.ndarray] = []
         self._lock = threading.RLock()
@@ -81,6 +82,7 @@ class FaceDatabase:
                 with open(self._db_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 self._names = data.get("names", [])
+                self._emp_ids = data.get("emp_ids", self._names.copy())
                 self._embeddings = [
                     np.array(emb, dtype=np.float32)
                     for emb in data.get("embeddings", [])
@@ -100,6 +102,7 @@ class FaceDatabase:
         with self._lock:
             os.makedirs(self._data_dir, exist_ok=True)
             data = {
+                "emp_ids": self._emp_ids,
                 "names": self._names,
                 "embeddings": [emb.tolist() for emb in self._embeddings],
             }
@@ -111,38 +114,40 @@ class FaceDatabase:
     # CRUD
     # ------------------------------------------------------------------
 
-    def add_face(self, name: str, embedding: np.ndarray) -> int:
+    def add_face(self, emp_id: str, name: str, embedding: np.ndarray) -> int:
         """
         Add or update a face.
-        If the name already exists -> updates the embedding.
+        If the emp_id already exists -> updates the embedding.
         Returns the total number of records after adding.
         """
         with self._lock:
-            if name in self._names:
-                idx = self._names.index(name)
+            if emp_id in self._emp_ids:
+                idx = self._emp_ids.index(emp_id)
+                self._names[idx] = name
                 self._embeddings[idx] = embedding
-                logger.info("Updated embedding for: '%s'", name)
+                logger.info("Updated embedding for ID: '%s' (Name: '%s')", emp_id, name)
             else:
+                self._emp_ids.append(emp_id)
                 self._names.append(name)
                 self._embeddings.append(embedding)
-                logger.info("Registered new face: '%s'", name)
+                logger.info("Registered new face ID: '%s' (Name: '%s')", emp_id, name)
             self.save()
-            return len(self._names)
+            return len(self._emp_ids)
 
     def match_face(
         self, target_embedding: np.ndarray, threshold: float | None = None
-    ) -> tuple[str, float]:
+    ) -> tuple[str | None, str, float]:
         """
         Find the best matching face using cosine similarity.
 
         Returns:
-            (name, score) — name = 'Stranger' if there's no match.
+            (emp_id, name, score) — emp_id = None, name = 'Stranger' if there's no match.
         """
         th = threshold if threshold is not None else settings.SIMILARITY_THRESHOLD
 
         with self._lock:
             if not self._embeddings:
-                return "Stranger", 0.0
+                return None, "Stranger", 0.0
 
             similarities = [
                 self._cosine_similarity(target_embedding, emb)
@@ -152,8 +157,8 @@ class FaceDatabase:
             max_score = float(similarities[max_idx])
 
             if max_score >= th:
-                return self._names[max_idx], max_score
-            return "Stranger", max_score
+                return self._emp_ids[max_idx], self._names[max_idx], max_score
+            return None, "Stranger", max_score
 
     # ------------------------------------------------------------------
     # Bootstrap
@@ -165,7 +170,12 @@ class FaceDatabase:
         for filename in os.listdir(self._data_dir):
             if not filename.lower().endswith((".png", ".jpg", ".jpeg")):
                 continue
-            name = os.path.splitext(filename)[0]
+            filename_no_ext = os.path.splitext(filename)[0]
+            if "_" in filename_no_ext:
+                emp_id, name = filename_no_ext.split("_", 1)
+            else:
+                emp_id, name = filename_no_ext, filename_no_ext
+            
             img_path = os.path.join(self._data_dir, filename)
             img = cv2.imread(img_path)
             if img is None:
@@ -175,7 +185,7 @@ class FaceDatabase:
             if not faces:
                 logger.warning("No face detected in: %s", img_path)
                 continue
-            self.add_face(name, faces[0].embedding)
+            self.add_face(emp_id, name, faces[0].embedding)
             registered += 1
 
         if registered > 0:
@@ -194,4 +204,4 @@ class FaceDatabase:
     @property
     def count(self) -> int:
         with self._lock:
-            return len(self._names)
+            return len(self._emp_ids)

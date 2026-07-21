@@ -51,24 +51,25 @@ async def recognize_face(
         results: list[FaceResult] = []
         for face in faces:
             bbox = face.bbox.astype(int).tolist()  # [x1, y1, x2, y2]
-            name, score = db.match_face(face.embedding)
+            emp_id, name, score = db.match_face(face.embedding)
 
             # --- Anti-Spoofing ---
             is_real, liveness_score = engine.check_liveness(img_bgr, bbox)
 
             liveness_tag = "REAL" if is_real else "⚠ FAKE"
             logger.info(
-                "[RECOGNIZE] IP: %s | Name: %s | Match: %.4f | Liveness: %.4f | %s",
-                client_ip, name, score, liveness_score, liveness_tag,
+                "[RECOGNIZE] IP: %s | ID: %s | Name: %s | Match: %.4f | Liveness: %.4f | %s",
+                client_ip, emp_id, name, score, liveness_score, liveness_tag,
             )
             if not is_real:
                 logger.warning(
-                    "[SECURITY] SPOOFING DETECTED! IP: %s | Name: %s | Liveness: %.4f",
-                    client_ip, name, liveness_score,
+                    "[SECURITY] SPOOFING DETECTED! IP: %s | ID: %s | Name: %s | Liveness: %.4f",
+                    client_ip, emp_id, name, liveness_score,
                 )
 
             results.append(
                 FaceResult(
+                    emp_id=emp_id,
                     name=name,
                     score=round(score, 6),
                     bbox=bbox,

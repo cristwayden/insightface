@@ -36,9 +36,15 @@
   <div class="card">
     <div class="card-title">📝 Register New Face</div>
     
-    <div class="form-group">
-      <label class="form-label" for="employeeName">Employee Full Name (or ID)</label>
-      <input type="text" id="employeeName" class="form-input" placeholder="Example: EMP_JohnDoe" autocomplete="off" />
+    <div class="form-group" style="display: flex; gap: 16px;">
+      <div style="flex: 1;">
+        <label class="form-label" for="employeeId">Employee ID</label>
+        <input type="text" id="employeeId" class="form-input" placeholder="Example: EMP01" autocomplete="off" />
+      </div>
+      <div style="flex: 2;">
+        <label class="form-label" for="employeeName">Employee Full Name</label>
+        <input type="text" id="employeeName" class="form-input" placeholder="Example: John Doe" autocomplete="off" />
+      </div>
     </div>
 
     <div class="form-label">Portrait Photo</div>
@@ -67,6 +73,7 @@
   const video       = document.getElementById('video');
   const canvas      = document.getElementById('canvas');
   const registerBtn = document.getElementById('registerBtn');
+  const idInput     = document.getElementById('employeeId');
   const nameInput   = document.getElementById('employeeName');
   const resultMsg   = document.getElementById('resultMsg');
   const placeholder = document.getElementById('camPlaceholder');
@@ -99,9 +106,17 @@
 
   // ── Register ──
   registerBtn.addEventListener('click', async () => {
+    const emp_id = idInput.value.trim();
     const name = nameInput.value.trim();
+    
+    if (!emp_id) {
+      showResult('error', 'Please enter the employee ID!');
+      idInput.focus();
+      return;
+    }
+
     if (!name) {
-      showResult('error', 'Please enter the employee name or ID!');
+      showResult('error', 'Please enter the employee name!');
       nameInput.focus();
       return;
     }
@@ -123,6 +138,7 @@
     canvas.toBlob(async (blob) => {
       const fd = new FormData();
       fd.append('file', blob, 'capture.jpg');
+      fd.append('emp_id', emp_id);
       fd.append('name', name);
 
       try {
@@ -136,7 +152,8 @@
 
         if (resp.ok && data.status === 'success') {
           showResult('success', `✅ ${data.message}`);
-          nameInput.value = ''; // Reset input
+          idInput.value = ''; // Reset input
+          nameInput.value = '';
         } else {
           showResult('error', `❌ Error: ${data.detail?.message || data.message || 'Unknown error'}`);
         }
@@ -160,12 +177,13 @@
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
   
-  // Enter to submit
-  nameInput.addEventListener('keypress', function (e) {
+  function handleEnter(e) {
     if (e.key === 'Enter') {
       registerBtn.click();
     }
-  });
+  }
+  idInput.addEventListener('keypress', handleEnter);
+  nameInput.addEventListener('keypress', handleEnter);
 </script>
 </body>
 </html>

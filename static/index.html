@@ -239,10 +239,12 @@
       ? '<span class="badge badge-real">🟢 Real Person</span>'
       : '<span class="badge badge-fake">🔴 SPOOFING DETECTED</span>';
 
+    const displayName = face.emp_id ? `[${face.emp_id}] ${face.name}` : face.name;
+
     identityEl.className = `identity-card ${cls}`;
     identityEl.innerHTML = `
       <div class="identity-avatar">${emoji}</div>
-      <div class="identity-name">${escHtml(face.name)}</div>
+      <div class="identity-name">${escHtml(displayName)}</div>
       <div class="identity-sub">Recognized at ${now()}</div>
       ${badge}
       <div class="metrics">
@@ -260,7 +262,7 @@
     `;
 
     // Fake box position (center of video)
-    showFaceBox(face.name, isReal);
+    showFaceBox(displayName, isReal);
   }
 
   function renderNoFace() {
@@ -304,8 +306,12 @@
 
   // ── History ──
   function addHistory(face) {
+    let displayName = 'Not found';
+    if (face) {
+      displayName = face.emp_id ? `[${face.emp_id}] ${face.name}` : face.name;
+    }
     const item = face
-      ? { name: face.name, real: face.is_real, score: face.score, time: now() }
+      ? { name: displayName, real: face.is_real, score: face.score, time: now() }
       : { name: 'Not found', real: null, score: 0, time: now() };
     historyItems.unshift(item);
     if (historyItems.length > 30) historyItems.pop();

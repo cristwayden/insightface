@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Ký Khuôn Mặt (Lấy mẫu)</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background-color: #2c3e50; color: white; margin: 0; padding: 20px; }
+        video { width: 100%; max-width: 400px; border-radius: 10px; background: #000; }
+        input { padding: 10px; font-size: 16px; margin: 10px; width: 80%; max-width: 300px; border-radius: 5px; border: none; }
+        button { padding: 15px 30px; font-size: 18px; font-weight: bold; margin-top: 10px; background-color: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        button:disabled { background-color: #7f8c8d; }
+        #result { margin-top: 20px; font-size: 18px; font-weight: bold; }
+        canvas { display: none; }
+        .nav { margin-bottom: 20px; }
+        .nav a { color: #3498db; text-decoration: none; font-size: 18px; }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <a href="index.html">⬅ Quay lại Nhận Diện</a>
+    </div>
+
+    <h2>Lấy mẫu (Đăng ký) Khuôn Mặt</h2>
+    <p>Nhập tên nhân viên và nhìn thẳng vào camera để đăng ký.</p>
+    
+    <input type="text" id="employeeName" placeholder="Nhập tên nhân viên..." required>
+    <br>
+    
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+    
+    <br>
+    <button id="registerBtn">Chụp & Đăng Ký</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const registerBtn = document.getElementById('registerBtn');
+        const resultDiv = document.getElementById('result');
+        const nameInput = document.getElementById('employeeName');
+
+        // Bật camera trước
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { resultDiv.innerText = "Lỗi mở camera: " + err; resultDiv.style.color = "#e74c3c"; });
+
+        registerBtn.addEventListener('click', async () => {
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert("Vui lòng nhập tên nhân viên!");
+                return;
+            }
+
+            registerBtn.disabled = true;
+            resultDiv.innerText = "Đang xử lý...";
+            resultDiv.style.color = "#f1c40f";
+
+            // Chụp khung hình
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            // Chuyển thành Blob
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('file', blob, 'capture.jpg');
+                formData.append('name', name); // Gửi thêm tên
+
+                try {
+                    const host = window.location.hostname || "127.0.0.1";
+                    const serverUrl = `http://${host}:8000/register`;
+                    
+                    const response = await fetch(serverUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        resultDiv.innerText = data.message;
+                        resultDiv.style.color = "#2ecc71";
+                        nameInput.value = ""; // Xóa input sau khi đk thành công
+                    } else {
+                        resultDiv.innerText = "Lỗi: " + data.message;
+                        resultDiv.style.color = "#e74c3c";
+                    }
+                } catch (error) {
+                    resultDiv.innerText = "Lỗi kết nối máy chủ";
+                    resultDiv.style.color = "#e74c3c";
+                }
+                registerBtn.disabled = false;
+            }, 'image/jpeg');
+        });
+    </script>
+</body>
+</html>

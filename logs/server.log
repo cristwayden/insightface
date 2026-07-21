@@ -1,0 +1,192 @@
+2026-07-21 10:08:55 | INFO     | ============================================================
+2026-07-21 10:08:55 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:08:55 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:08:55 | INFO     | ============================================================
+2026-07-21 10:08:55 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:08:58 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:08:58 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:08:58 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:08:58 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:08:58 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:08:58 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:08:58 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:09:10 | INFO     | ============================================================
+2026-07-21 10:09:10 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:09:10 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:09:10 | INFO     | ============================================================
+2026-07-21 10:09:10 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:09:12 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:09:12 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:09:12 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:09:12 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:09:12 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:09:12 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:09:12 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:09:21 | INFO     | ============================================================
+2026-07-21 10:09:21 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:09:21 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:09:21 | INFO     | ============================================================
+2026-07-21 10:09:21 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:09:22 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:09:22 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:09:22 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:09:22 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:09:22 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:09:22 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:09:22 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:09:33 | INFO     | ============================================================
+2026-07-21 10:09:33 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:09:33 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:09:33 | INFO     | ============================================================
+2026-07-21 10:09:33 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:09:35 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:09:35 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:09:35 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:09:35 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:09:35 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:09:35 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:09:35 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:09:51 | INFO     | ============================================================
+2026-07-21 10:09:51 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:09:51 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:09:51 | INFO     | ============================================================
+2026-07-21 10:09:51 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:09:54 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:09:54 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:09:54 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:09:54 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:09:54 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:09:54 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:09:54 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:10:12 | INFO     | ============================================================
+2026-07-21 10:10:12 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:10:12 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:10:12 | INFO     | ============================================================
+2026-07-21 10:10:12 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:10:14 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:10:14 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:10:14 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:10:14 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:10:14 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:10:14 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:10:14 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:10:40 | INFO     | ============================================================
+2026-07-21 10:10:40 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:10:40 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:10:40 | INFO     | ============================================================
+2026-07-21 10:10:40 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:10:42 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:10:42 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:10:42 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:10:42 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:10:42 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:10:42 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:10:42 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:11:38 | INFO     | ============================================================
+2026-07-21 10:11:38 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:11:38 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:11:38 | INFO     | ============================================================
+2026-07-21 10:11:38 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:11:40 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:11:40 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:11:40 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:11:40 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:11:40 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:11:40 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:11:40 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:15:11 | INFO     | ============================================================
+2026-07-21 10:15:11 | INFO     | HỆ THỐNG FACE RECOGNITION API KHỞI ĐỘNG
+2026-07-21 10:15:11 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:15:11 | INFO     | ============================================================
+2026-07-21 10:15:11 | INFO     | Đang nạp mô hình AI InsightFace, vui lòng đợi...
+2026-07-21 10:15:14 | INFO     | ✅ Nạp mô hình InsightFace thành công
+2026-07-21 10:15:14 | INFO     | Đang nạp mô hình Anti-Spoofing...
+2026-07-21 10:15:14 | INFO     | ✅ Nạp mô hình Anti-Spoofing thành công
+2026-07-21 10:15:14 | INFO     | Đang nạp dữ liệu từ data\database.json...
+2026-07-21 10:15:14 | INFO     | ✅ Nạp xong 6 khuôn mặt từ database.
+2026-07-21 10:15:14 | INFO     | --- HỆ THỐNG SERVER ĐÃ SẴN SÀNG ---
+2026-07-21 10:15:14 | INFO     | Cổng: 8000 | Địa chỉ: 0.0.0.0
+2026-07-21 10:16:56 | INFO     | ============================================================
+2026-07-21 10:16:56 | INFO     | FACE RECOGNITION API SYSTEM STARTING
+2026-07-21 10:16:56 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:16:56 | INFO     | ============================================================
+2026-07-21 10:16:56 | INFO     | Loading InsightFace AI model, please wait...
+2026-07-21 10:16:59 | INFO     | ✅ InsightFace model loaded successfully
+2026-07-21 10:16:59 | INFO     | Loading Anti-Spoofing model...
+2026-07-21 10:16:59 | INFO     | ✅ Anti-Spoofing model loaded successfully
+2026-07-21 10:16:59 | INFO     | Loading data from data\database.json...
+2026-07-21 10:16:59 | INFO     | ✅ Loaded 6 faces from database.
+2026-07-21 10:16:59 | INFO     | --- SERVER SYSTEM READY ---
+2026-07-21 10:16:59 | INFO     | Port: 8000 | Address: 0.0.0.0
+2026-07-21 10:17:27 | INFO     | ============================================================
+2026-07-21 10:17:27 | INFO     | FACE RECOGNITION API SYSTEM STARTING
+2026-07-21 10:17:27 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:17:27 | INFO     | ============================================================
+2026-07-21 10:17:27 | INFO     | Loading InsightFace AI model, please wait...
+2026-07-21 10:17:29 | INFO     | ✅ InsightFace model loaded successfully
+2026-07-21 10:17:29 | INFO     | Loading Anti-Spoofing model...
+2026-07-21 10:17:29 | INFO     | ✅ Anti-Spoofing model loaded successfully
+2026-07-21 10:17:29 | INFO     | Loading data from data\database.json...
+2026-07-21 10:17:29 | INFO     | ✅ Loaded 6 faces from database.
+2026-07-21 10:17:29 | INFO     | --- SERVER SYSTEM READY ---
+2026-07-21 10:17:29 | INFO     | Port: 8000 | Address: 0.0.0.0
+2026-07-21 10:17:56 | INFO     | ============================================================
+2026-07-21 10:17:56 | INFO     | FACE RECOGNITION API SYSTEM STARTING
+2026-07-21 10:17:56 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:17:56 | INFO     | ============================================================
+2026-07-21 10:17:56 | INFO     | Loading InsightFace AI model, please wait...
+2026-07-21 10:17:59 | INFO     | ✅ InsightFace model loaded successfully
+2026-07-21 10:17:59 | INFO     | Loading Anti-Spoofing model...
+2026-07-21 10:17:59 | INFO     | ✅ Anti-Spoofing model loaded successfully
+2026-07-21 10:17:59 | INFO     | Loading data from data\database.json...
+2026-07-21 10:17:59 | INFO     | ✅ Loaded 6 faces from database.
+2026-07-21 10:17:59 | INFO     | --- SERVER SYSTEM READY ---
+2026-07-21 10:17:59 | INFO     | Port: 8000 | Address: 0.0.0.0
+2026-07-21 10:18:24 | INFO     | ============================================================
+2026-07-21 10:18:24 | INFO     | FACE RECOGNITION API SYSTEM STARTING
+2026-07-21 10:18:24 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:18:24 | INFO     | ============================================================
+2026-07-21 10:18:24 | INFO     | Loading InsightFace AI model, please wait...
+2026-07-21 10:18:27 | INFO     | ✅ InsightFace model loaded successfully
+2026-07-21 10:18:27 | INFO     | Loading Anti-Spoofing model...
+2026-07-21 10:18:27 | INFO     | ✅ Anti-Spoofing model loaded successfully
+2026-07-21 10:18:27 | INFO     | Loading data from data\database.json...
+2026-07-21 10:18:27 | INFO     | ✅ Loaded 6 faces from database.
+2026-07-21 10:18:27 | INFO     | --- SERVER SYSTEM READY ---
+2026-07-21 10:18:27 | INFO     | Port: 8000 | Address: 0.0.0.0
+2026-07-21 10:19:18 | INFO     | ============================================================
+2026-07-21 10:19:18 | INFO     | FACE RECOGNITION API SYSTEM STARTING
+2026-07-21 10:19:18 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:19:18 | INFO     | ============================================================
+2026-07-21 10:19:18 | INFO     | Loading InsightFace AI model, please wait...
+2026-07-21 10:19:21 | INFO     | ✅ InsightFace model loaded successfully
+2026-07-21 10:19:21 | INFO     | Loading Anti-Spoofing model...
+2026-07-21 10:19:21 | INFO     | ✅ Anti-Spoofing model loaded successfully
+2026-07-21 10:19:21 | INFO     | Loading data from data\database.json...
+2026-07-21 10:19:21 | INFO     | ✅ Loaded 6 faces from database.
+2026-07-21 10:19:21 | INFO     | --- SERVER SYSTEM READY ---
+2026-07-21 10:19:21 | INFO     | Port: 8000 | Address: 0.0.0.0
+2026-07-21 10:19:54 | INFO     | ============================================================
+2026-07-21 10:19:54 | INFO     | FACE RECOGNITION API SYSTEM STARTING
+2026-07-21 10:19:54 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:19:54 | INFO     | ============================================================
+2026-07-21 10:19:54 | INFO     | Loading InsightFace AI model, please wait...
+2026-07-21 10:19:57 | INFO     | ✅ InsightFace model loaded successfully
+2026-07-21 10:19:57 | INFO     | Loading Anti-Spoofing model...
+2026-07-21 10:19:57 | INFO     | ✅ Anti-Spoofing model loaded successfully
+2026-07-21 10:19:57 | INFO     | Loading data from data\database.json...
+2026-07-21 10:19:57 | INFO     | ✅ Loaded 6 faces from database.
+2026-07-21 10:19:57 | INFO     | --- SERVER SYSTEM READY ---
+2026-07-21 10:19:57 | INFO     | Port: 8000 | Address: 0.0.0.0
+2026-07-21 10:21:44 | INFO     | ============================================================
+2026-07-21 10:21:44 | INFO     | FACE RECOGNITION API SYSTEM STARTING
+2026-07-21 10:21:44 | INFO     | Log file: D:\InSigntFace\logs\server.log
+2026-07-21 10:21:44 | INFO     | ============================================================
+2026-07-21 10:21:44 | INFO     | Loading InsightFace AI model, please wait...
+2026-07-21 10:21:47 | INFO     | ✅ InsightFace model loaded successfully
+2026-07-21 10:21:47 | INFO     | Loading Anti-Spoofing model...
+2026-07-21 10:21:47 | INFO     | ✅ Anti-Spoofing model loaded successfully
+2026-07-21 10:21:47 | INFO     | Loading data from data\database.json...
+2026-07-21 10:21:47 | INFO     | ✅ Loaded 6 faces from database.
+2026-07-21 10:21:47 | INFO     | --- SERVER SYSTEM READY ---
+2026-07-21 10:21:47 | INFO     | Port: 8000 | Address: 0.0.0.0

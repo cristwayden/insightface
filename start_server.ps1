@@ -1,6 +1,6 @@
-# start_server.ps1 - Auto kill port 8000 then start server
+# start_server.ps1 - Auto kill port 5005 then start server
 
-$PORT = 8000
+$PORT = 5005
 
 Write-Host "Checking port $PORT..." -ForegroundColor Cyan
 
@@ -17,4 +17,4 @@ if ($existing) {
 }
 
 Write-Host "Starting server..." -ForegroundColor Cyan
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 5005 --reload

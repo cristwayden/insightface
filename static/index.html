@@ -113,7 +113,8 @@
 </div><!-- /container -->
 
 <script>
-  const API_BASE = `http://${window.location.hostname || '127.0.0.1'}:8000/api/v1`;
+  const PORT = window.location.port || '5005';
+  const API_BASE = `http://${window.location.hostname || '127.0.0.1'}:${PORT}/api/v1`;
 
   const video       = document.getElementById('video');
   const canvas      = document.getElementById('canvas');
@@ -133,7 +134,7 @@
   // ── Server health check ──
   async function checkServer() {
     try {
-      const r = await fetch(`http://${window.location.hostname || '127.0.0.1'}:8000/`);
+      const r = await fetch(`http://${window.location.hostname || '127.0.0.1'}:${PORT}/`);
       if (r.ok) {
         document.getElementById('statusDot').style.background = 'var(--success)';
         document.getElementById('statusText').textContent = 'Server online';

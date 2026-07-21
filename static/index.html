@@ -55,10 +55,9 @@
                 formData.append('file', blob, 'capture.jpg');
 
                 try {
-                    // LƯU Ý: Gửi đến API. Cần cấu hình đúng IP máy chủ nếu mở từ thiết bị khác.
-                    // Nếu mở file index.html trên máy tính (URL file://) thì hostname sẽ rỗng, ta dùng '127.0.0.1'.
+                    // API v1 endpoint
                     const host = window.location.hostname || "127.0.0.1";
-                    const serverUrl = `http://${host}:8000/recognize`;
+                    const serverUrl = `http://${host}:8000/api/v1/recognize`;
                     
                     const response = await fetch(serverUrl, {
                         method: 'POST',

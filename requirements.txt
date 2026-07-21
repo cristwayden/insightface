@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-multipart
 numpy
 opencv-python
@@ -8,3 +8,5 @@ onnxruntime
 Pillow
 torch
 torchvision
+pydantic-settings
+python-dotenv

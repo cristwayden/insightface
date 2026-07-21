@@ -71,8 +71,9 @@
                 formData.append('name', name); // Gửi thêm tên
 
                 try {
+                    // API v1 endpoint
                     const host = window.location.hostname || "127.0.0.1";
-                    const serverUrl = `http://${host}:8000/register`;
+                    const serverUrl = `http://${host}:8000/api/v1/register`;
                     
                     const response = await fetch(serverUrl, {
                         method: 'POST',

@@ -1,39 +1,43 @@
-# 🎭 InsightFace – Face Recognition & Anti-Spoofing System
+# 🎭 InsightFace – Hệ thống Nhận diện Khuôn mặt & Chống Giả mạo
 
-A real-time face recognition server built with **FastAPI** + **InsightFace**, featuring **liveness detection (anti-spoofing)** to prevent photo/video attacks.
-
----
-
-## ✨ Features
-
-- 🔍 **Face Recognition** – Identify registered faces in real time via webcam
-- 🛡️ **Anti-Spoofing (Liveness Detection)** – Detect fake faces from photos or screens
-- 📝 **Face Registration** – Register new faces directly through the browser
-- 📊 **Log Viewer** – Access recent server logs via REST API
-- 🌐 **Web UI** – Browser-based interface, no app installation required
+Máy chủ nhận diện khuôn mặt thời gian thực, xây dựng trên nền **FastAPI** + **InsightFace**, tích hợp **Anti-Spoofing (MiniFASNet)** để phát hiện tấn công bằng ảnh/video. Kiến trúc phân tầng rõ ràng, dễ mở rộng và bảo trì.
 
 ---
 
-## 📋 Requirements
+## ✨ Tính năng
 
-| Requirement | Version |
+| Tính năng | Mô tả |
+|---|---|
+| 🔍 **Nhận diện khuôn mặt** | Xác định người đã đăng ký qua webcam theo thời gian thực |
+| 🛡️ **Anti-Spoofing** | Phát hiện khuôn mặt giả (ảnh in, màn hình, video phát lại) |
+| 📝 **Đăng ký khuôn mặt** | Thêm người mới trực tiếp qua trình duyệt |
+| 📊 **Log Viewer API** | Xem log server qua REST API |
+| 🌐 **Giao diện Web** | Frontend HTML sẵn có, không cần cài ứng dụng |
+| ⚙️ **Cấu hình linh hoạt** | Toàn bộ tham số đọc từ file `.env` |
+| 🔑 **API Key (tùy chọn)** | Bảo vệ endpoint bằng API Key header |
+
+---
+
+## 📋 Yêu cầu hệ thống
+
+| Thành phần | Phiên bản |
 |---|---|
 | Python | 3.9+ |
 | OS | Windows / Linux / macOS |
-| Camera | Required for web UI |
+| Camera | Bắt buộc để dùng Web UI |
 
 ---
 
-## 🚀 Installation
+## 🚀 Cài đặt
 
-### 1. Clone the repository
+### 1. Clone repository
 
 ```bash
 git clone https://github.com/cristwayden/insightface.git
 cd insightface
 ```
 
-### 2. Create a virtual environment (recommended)
+### 2. Tạo môi trường ảo (khuyến nghị)
 
 ```bash
 python -m venv venv
@@ -45,140 +49,175 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 3. Install dependencies
+### 3. Cài dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-> **Note:** `torch` and `torchvision` may take several minutes to download. For GPU support, install the appropriate CUDA version of PyTorch from [pytorch.org](https://pytorch.org/).
+> **Lưu ý:** `torch` và `torchvision` có thể mất vài phút để tải. Để dùng GPU, cài PyTorch phiên bản CUDA phù hợp tại [pytorch.org](https://pytorch.org/).
+
+### 4. Cấu hình môi trường
+
+```bash
+# Sao chép file mẫu
+copy .env.example .env   # Windows
+cp .env.example .env     # Linux/macOS
+```
+
+Chỉnh sửa `.env` theo nhu cầu (xem phần [Cấu hình](#%EF%B8%8F-cấu-hình) bên dưới).
 
 ---
 
-## ▶️ Starting the Server
+## ▶️ Khởi chạy Server
 
-### Option A – Using PowerShell script (Windows, recommended)
+### Cách A — Script PowerShell (Windows, khuyến nghị)
 
-The script automatically kills any process occupying port 8000 before starting:
+Tự động kill process đang chiếm port 8000 trước khi khởi động:
 
 ```powershell
 .\start_server.ps1
 ```
 
-### Option B – Run directly with Python
+### Cách B — Chạy trực tiếp
 
 ```bash
-python server.py
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Once started, the server listens at:
-
-```
-http://0.0.0.0:8000
-```
-
-You will see output similar to:
+Server sẽ khởi động tại `http://0.0.0.0:8000` và hiển thị:
 
 ```
 ============================================================
-FACE RECOGNITION API SYSTEM STARTING
+INSIGHTFACE API — ĐANG KHỞI ĐỘNG
 ============================================================
-Loading InsightFace AI model, please wait...
-✅ InsightFace model loaded successfully
-Loading Anti-Spoofing model...
-✅ Anti-Spoofing model loaded successfully
---- SERVER SYSTEM READY ---
-Port: 8000 | Address: 0.0.0.0
+✅ InsightFace model tải xong.
+✅ Anti-Spoofing model tải xong.
+✅ SERVER SẴN SÀNG — Port: 8000 | Host: 0.0.0.0
+============================================================
 ```
 
 ---
 
-## 🌐 Web Interface
+## 🌐 Giao diện Web
 
-Open the HTML files in your browser **after** the server is running:
-
-| File | Description |
+| URL | Mô tả |
 |---|---|
-| `index.html` | **Face Scanner** – scan faces via webcam in real time |
-| `register.html` | **Face Registration** – register new faces into the database |
+| `http://localhost:8000/static/index.html` | **Máy quét** – nhận diện khuôn mặt qua webcam |
+| `http://localhost:8000/static/register.html` | **Đăng ký** – thêm khuôn mặt mới vào hệ thống |
+| `http://localhost:8000/docs` | **Swagger UI** – thử nghiệm API trực tiếp |
 
-> **Tip:** If accessing from a different device on the same network, replace `127.0.0.1` in the browser URL with the server machine's IP address (e.g., `http://192.168.1.x:8000`).
+> **Truy cập từ thiết bị khác (cùng mạng LAN):** Thay `localhost` bằng IP máy chủ, ví dụ: `http://192.168.1.x:8000/static/index.html`
 
-### Face Scanner (`index.html`)
+### Máy quét khuôn mặt
 
-1. Open `index.html` in your browser
-2. Allow camera access when prompted
-3. Click **"Quét Khuôn Mặt"** (Scan Face)
-4. The result will display:
-   - ✅ **Green** – Recognized person (real face)
-   - 🔴 **Red** – Spoofing detected (fake/photo face)
-   - 🟠 **Orange** – No face found
+1. Mở `http://localhost:8000/static/index.html`
+2. Cho phép truy cập camera
+3. Nhấn **"Quét Khuôn Mặt"**
+4. Kết quả hiển thị:
+   - 🟢 **Xanh** – Người đã đăng ký, khuôn mặt thật
+   - 🔴 **Đỏ** – Phát hiện giả mạo (ảnh/video)
+   - 🟠 **Cam** – Không tìm thấy khuôn mặt
 
-### Face Registration (`register.html`)
+### Đăng ký khuôn mặt
 
-1. Open `register.html` in your browser
-2. Enter the person's name in the input field
-3. Look directly at the camera
-4. Click **"Chụp & Đăng Ký"** (Capture & Register)
-5. A success message confirms the face was saved
+1. Mở `http://localhost:8000/static/register.html`
+2. Nhập tên nhân viên
+3. Nhìn thẳng vào camera
+4. Nhấn **"Chụp & Đăng Ký"**
 
 ---
 
-## 📁 Project Structure
+## 📁 Cấu trúc Project
 
 ```
-InsightFace/
-├── server.py               # FastAPI server – main application
-├── start_server.ps1        # PowerShell startup script (Windows)
-├── requirements.txt        # Python dependencies
-├── index.html              # Web UI – face scanner
-├── register.html           # Web UI – face registration
+insightface/
+├── app/
+│   ├── main.py                        # Entry point FastAPI (Lifespan, CORS, Routes)
+│   ├── api/
+│   │   ├── deps.py                    # Dependency Injection providers
+│   │   └── v1/
+│   │       ├── router.py              # Gộp tất cả route v1
+│   │       └── endpoints/
+│   │           ├── recognize.py       # POST /api/v1/recognize
+│   │           ├── register.py        # POST /api/v1/register
+│   │           └── logs.py            # GET  /api/v1/logs
+│   ├── core/
+│   │   ├── config.py                  # Đọc .env (pydantic-settings)
+│   │   ├── logging.py                 # RotatingFileHandler tập trung
+│   │   └── security.py                # API Key authentication
+│   ├── services/
+│   │   ├── face_engine.py             # Singleton AI (InsightFace + Anti-Spoof)
+│   │   └── db_service.py              # Thread-safe JSON database
+│   └── schemas/
+│       ├── recognize.py               # Pydantic response models
+│       └── register.py                # Pydantic response models
 │
-├── data/                   # Face database (auto-created)
-│   ├── database.json       # Stored face embeddings & names
-│   └── *.jpg               # Registered face images
+├── static/
+│   ├── index.html                     # Giao diện Nhận diện
+│   └── register.html                  # Giao diện Đăng ký
 │
-├── logs/                   # Server log files (auto-created)
-│   └── server.log          # Rotating log (5 MB × 3 backups)
+├── data/                              # Dữ liệu khuôn mặt (tự tạo khi chạy)
+│   ├── database.json                  # Embeddings đã lưu
+│   └── *.jpg                          # Ảnh backup nhân viên
+│
+├── logs/                              # Log files (tự tạo khi chạy)
+│   └── server.log                     # Rotating log (5 MB × 3 bản)
 │
 ├── resources/
-│   ├── anti_spoof_models/  # Anti-spoofing model weights
-│   └── detection_model/    # Face detection model weights
+│   ├── anti_spoof_models/             # Weights MiniFASNet
+│   └── detection_model/               # Weights face detection
 │
-└── src/
-    ├── anti_spoof_predict.py
-    ├── generate_patches.py
-    └── utility.py
+├── src/                               # Anti-Spoofing library (Minivision)
+│   ├── anti_spoof_predict.py
+│   ├── generate_patches.py
+│   └── utility.py
+│
+├── .env                               # Biến môi trường (không commit Git)
+├── .env.example                       # Template cấu hình
+├── requirements.txt
+├── start_server.ps1                   # Script khởi động (Windows)
+└── README.md
 ```
 
 ---
 
-## 🔌 REST API Reference
+## 🔌 REST API
 
-Base URL: `http://localhost:8000`
+**Base URL:** `http://localhost:8000`  
+**Swagger UI:** `http://localhost:8000/docs`
+
+---
 
 ### `GET /`
 
-Health check – confirms the server is running.
+Health check — kiểm tra server đang hoạt động.
 
 **Response:**
 ```json
 {
-  "message": "Face Recognition API system is running. Send POST to /recognize to scan."
+  "message": "InsightFace API đang hoạt động.",
+  "version": "2.0.0",
+  "endpoints": {
+    "recognize": "POST /api/v1/recognize",
+    "register":  "POST /api/v1/register",
+    "logs":      "GET  /api/v1/logs",
+    "frontend":  "GET  /static/index.html"
+  }
 }
 ```
 
 ---
 
-### `POST /recognize`
+### `POST /api/v1/recognize`
 
-Detect and recognize faces in an uploaded image.
+Nhận diện khuôn mặt trong ảnh upload.
 
 **Request:** `multipart/form-data`
 
-| Field | Type | Description |
+| Trường | Kiểu | Mô tả |
 |---|---|---|
-| `file` | File | Image file (JPEG/PNG) |
+| `file` | File | Ảnh JPEG/PNG chứa khuôn mặt |
 
 **Response:**
 ```json
@@ -187,99 +226,152 @@ Detect and recognize faces in an uploaded image.
   "faces": [
     {
       "name": "Nguyen Van A",
-      "score": 0.92,
+      "score": 0.923,
       "bbox": [120, 80, 300, 320],
       "is_real": true,
-      "liveness_score": 0.97
+      "liveness_score": 0.971
     }
   ]
 }
 ```
 
-| Field | Description |
+| Trường | Mô tả |
 |---|---|
-| `name` | Recognized name, or `"Stranger"` if not in database |
-| `score` | Similarity score (0–1). Higher = more confident match |
+| `name` | Tên người, hoặc `"Stranger"` nếu không khớp |
+| `score` | Điểm tương đồng cosine (0–1) |
 | `bbox` | Bounding box `[x1, y1, x2, y2]` |
-| `is_real` | `true` = real face, `false` = spoofing detected |
-| `liveness_score` | Anti-spoofing confidence (0–1) |
+| `is_real` | `true` = khuôn mặt thật, `false` = phát hiện giả mạo |
+| `liveness_score` | Điểm Anti-Spoofing (0–1) |
 
 ---
 
-### `POST /register`
+### `POST /api/v1/register`
 
-Register a new face into the database.
+Đăng ký khuôn mặt mới vào hệ thống.
 
 **Request:** `multipart/form-data`
 
-| Field | Type | Description |
+| Trường | Kiểu | Mô tả |
 |---|---|---|
-| `name` | String | Name to associate with the face |
-| `file` | File | Image file containing the face |
+| `name` | String | Tên nhân viên cần đăng ký |
+| `file` | File | Ảnh chân dung |
 
 **Response:**
 ```json
 {
   "status": "success",
-  "message": "Successfully registered: Nguyen Van A"
+  "message": "Đăng ký thành công: Nguyen Van A"
 }
 ```
 
 ---
 
-### `GET /logs`
+### `GET /api/v1/logs`
 
-Retrieve the last 100 lines from the server log.
+Xem N dòng log gần nhất.
+
+**Query params:**
+
+| Tham số | Mặc định | Mô tả |
+|---|---|---|
+| `lines` | `100` | Số dòng log muốn lấy (1–5000) |
+
+**Ví dụ:** `GET /api/v1/logs?lines=50`
 
 **Response:**
 ```json
 {
-  "total_lines": 250,
-  "recent_logs": ["2026-07-21 10:00:00 | INFO     | ...", "..."]
+  "total_lines": 350,
+  "returned_lines": 50,
+  "log_file": "D:/InsightFace/logs/server.log",
+  "recent_logs": ["2026-07-21 10:00:00 | INFO | ..."]
 }
+```
+
+> **Backward compatibility:** Các URL cũ `/recognize`, `/register`, `/logs` vẫn hoạt động và sẽ tự động redirect sang `/api/v1/...`.
+
+---
+
+## ⚙️ Cấu hình
+
+Chỉnh sửa file `.env` để thay đổi cấu hình mà không cần sửa code:
+
+```env
+# Server
+APP_HOST=0.0.0.0
+APP_PORT=8000
+
+# Logging
+LOG_LEVEL=DEBUG          # DEBUG | INFO | WARNING | ERROR
+
+# Paths
+DATA_DIR=data
+RESOURCES_DIR=resources
+ANTI_SPOOF_MODELS_DIR=resources/anti_spoof_models
+DB_FILE=data/database.json
+
+# Face Recognition
+INSIGHTFACE_MODEL=buffalo_l
+DET_SIZE=640             # Kích thước detection (pixel)
+SIMILARITY_THRESHOLD=0.45  # Ngưỡng nhận diện (0.0 – 1.0)
+
+# Bảo mật (để trống = không bắt API key)
+# API_KEY=your_secret_key_here
+```
+
+### Bật API Key
+
+Khi `API_KEY` được đặt trong `.env`, tất cả endpoint yêu cầu header:
+
+```http
+X-API-Key: your_secret_key_here
 ```
 
 ---
 
-## 🗄️ Database Management
+## 🗄️ Quản lý Database
 
-The face database is automatically managed:
+Database được quản lý tự động:
 
-- **Location:** `data/database.json`
-- **Auto-load:** On startup, the server loads all registered faces
-- **Auto-build:** If `database.json` doesn't exist, the server scans the `data/` folder for any `.jpg`/`.png` images and auto-registers them using the filename as the person's name
+- **Vị trí:** `data/database.json`
+- **Auto-load:** Tải tất cả khuôn mặt đã đăng ký khi server khởi động
+- **Auto-bootstrap:** Nếu `database.json` chưa tồn tại, server tự quét thư mục `data/` để đăng ký từ ảnh có sẵn (tên file = tên người)
 
-**To pre-populate the database manually:**
+**Nạp dữ liệu thủ công:**
 
-1. Place image files named after the person (e.g., `john_doe.jpg`) into the `data/` folder
-2. Restart the server – it will auto-register all images and create `database.json`
+1. Đặt ảnh vào thư mục `data/` với tên file là tên người (vd: `nguyen_van_a.jpg`)
+2. Khởi động lại server — hệ thống tự đăng ký và tạo `database.json`
+
+**Cập nhật khuôn mặt:** Đăng ký lại cùng tên sẽ **ghi đè** embedding cũ.
 
 ---
 
 ## 📝 Logging
 
-Logs are stored in the `logs/` directory with automatic rotation:
-
-- **File:** `logs/server.log`
-- **Max size:** 5 MB per file
-- **Backups:** 3 files retained
-- **Console:** INFO level and above
-- **File:** DEBUG level and above (more verbose)
+| Thuộc tính | Giá trị |
+|---|---|
+| Vị trí | `logs/server.log` |
+| Kích thước tối đa | 5 MB / file |
+| Số bản lưu | 3 file |
+| Console | INFO trở lên |
+| File | DEBUG trở lên (chi tiết hơn) |
 
 ---
 
-## 🛠️ Troubleshooting
+## 🛠️ Xử lý sự cố
 
-| Problem | Solution |
+| Vấn đề | Giải pháp |
 |---|---|
-| `Port 8000 already in use` | Run `.\start_server.ps1` – it auto-kills the blocking process |
-| `No face found` during registration | Ensure good lighting, look directly at the camera, and use a clear photo |
-| `Spoofing detected` on a real face | Try better lighting or increase camera quality |
-| Camera not opening in browser | Ensure you are accessing via `http://` (not `file://`) when on a remote device |
-| Models not loading | Verify the `resources/anti_spoof_models/` and `resources/detection_model/` directories contain the required model files |
+| `uvicorn not recognized` | Dùng `python -m uvicorn ...` thay vì gọi trực tiếp |
+| `ModuleNotFoundError: pydantic_settings` | Chạy `pip install pydantic-settings python-dotenv` |
+| `Port 8000 already in use` | Chạy `.\start_server.ps1` — tự động kill process đang chiếm port |
+| Không nhận diện được khuôn mặt | Tăng ánh sáng, nhìn thẳng camera, giảm `SIMILARITY_THRESHOLD` trong `.env` |
+| `Spoofing detected` với mặt thật | Cải thiện ánh sáng hoặc chất lượng camera |
+| Camera không mở trên trình duyệt | Truy cập qua `http://` (không phải `file://`) |
+| Model không load | Kiểm tra `resources/anti_spoof_models/` và `resources/detection_model/` có đầy đủ file weight |
 
 ---
 
 ## 📄 License
 
-This project is for research and educational purposes.
+Dự án phục vụ mục đích nghiên cứu và giáo dục.

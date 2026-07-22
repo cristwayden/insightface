@@ -134,6 +134,8 @@
   let timeoutId     = null;
   let faceMeshReady = false;
   let mpCamera      = null;
+  let isProcessingCapture = false;
+  let poseResetRequired = false; // must leave previous pose zone before next step
 
   // ─────────────────────────────────────────────
   //  Server health check
@@ -310,7 +312,27 @@
   function handleCapture(pose) {
     if (currentStep >= CAPTURE_TARGETS.length) return;
 
-    const target  = CAPTURE_TARGETS[currentStep];
+    const target = CAPTURE_TARGETS[currentStep];
+
+    // After a step is captured, wait until user leaves the previous pose zone
+    if (poseResetRequired) {
+      const prevTarget = CAPTURE_TARGETS[currentStep - 1];
+      const stillInPrevPose = prevTarget.check(pose);
+      poseIndicator.style.display = 'block';
+      if (stillInPrevPose) {
+        poseIndicator.textContent = `Step ${currentStep + 1}/${CAPTURE_TARGETS.length}: ${target.label}`;
+        poseIndicator.style.color = '#fbbf24';
+        stableStart = 0;
+        holdRing.style.display = 'none';
+        ringFill.style.strokeDashoffset = RING_CIRC;
+        return;
+      } else {
+        // User has moved away — unlock next step
+        poseResetRequired = false;
+        stableStart = 0;
+      }
+    }
+
     const isMatch = target.check(pose);
 
     // Update indicator text
@@ -340,6 +362,9 @@
   }
 
   function captureStep() {
+    if (isProcessingCapture) return;
+    isProcessingCapture = true;
+
     // Flash
     captureFlash.classList.add('show');
     setTimeout(() => captureFlash.classList.remove('show'), 160);
@@ -353,6 +378,7 @@
     ctx.drawImage(video, 0, 0);
 
     canvas.toBlob(blob => {
+      isProcessingCapture = false;
       capturedBlobs.push(blob);
 
       // Update icon for completed step
@@ -361,7 +387,8 @@
       document.getElementById(`lbl-${doneId}`).className  = 'pose-step-label done';
 
       currentStep++;
-      stableStart = 0;
+      stableStart           = 0;
+      poseResetRequired     = Date.now() > 0; // true — must leave previous pose before next step
       holdRing.style.display = 'none';
       ringFill.style.strokeDashoffset = RING_CIRC;
 
@@ -440,6 +467,8 @@
     currentStep   = 0;
     capturedBlobs = [];
     stableStart   = 0;
+    isProcessingCapture = false;
+    stepCooldownEnd     = 0;
     clearTimeout(timeoutId);
 
     registerBtn.style.display = 'block';

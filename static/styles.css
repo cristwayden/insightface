@@ -373,3 +373,133 @@
     .container-sm {
       max-width: 900px;
     }
+
+    /* ── From manage.html ── */
+    .table-wrapper { overflow-x: auto; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 500; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { font-size: 0.95em; }
+    tr:last-child td { border-bottom: none; }
+    .action-btn { background: none; border: none; cursor: pointer; font-size: 1.2em; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
+    .action-btn:hover { background: var(--bg-glass); }
+    .btn-edit { color: var(--warning); }
+    .btn-delete { color: var(--danger); }
+
+    /* ── From register.html ── */
+    /* ── Pose Steps ── */
+    .pose-steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      justify-content: center;
+    }
+    .pose-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      flex: 1;
+    }
+    .pose-step-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: all 0.3s ease;
+    }
+    .pose-step-icon.done {
+      background: rgba(34,197,94,0.18);
+      border-color: var(--success);
+      box-shadow: 0 0 12px rgba(34,197,94,0.3);
+    }
+    .pose-step-icon.active {
+      background: rgba(250,204,21,0.15);
+      border-color: var(--warning);
+      box-shadow: 0 0 14px rgba(250,204,21,0.35);
+      animation: pulse-step 0.9s infinite;
+    }
+    .pose-step-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-align: center;
+    }
+    .pose-step-label.active { color: var(--warning); }
+    .pose-step-label.done   { color: var(--success); }
+    @keyframes pulse-step {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.1); }
+    }
+
+    /* ── Face mesh canvas (overlay on video) ── */
+    #meshCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+      transform: scaleX(-1); /* mirror theo video */
+    }
+
+    /* ── Pose instruction label ── */
+    #poseIndicator {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+      display: none;
+    }
+
+    /* ── Hold progress ring (SVG at camera center) ── */
+    #holdRing {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 9;
+      display: none;
+    }
+    #holdRing circle.track {
+      fill: none;
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 5;
+    }
+    #holdRing circle.fill {
+      fill: none;
+      stroke: var(--success);
+      stroke-width: 5;
+      stroke-linecap: round;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      transition: stroke-dashoffset 0.08s linear;
+    }
+
+    /* ── Capture flash ── */
+    .capture-flash {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.8);
+      border-radius: inherit;
+      z-index: 15;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.06s;
+    }
+    .capture-flash.show { opacity: 1; }

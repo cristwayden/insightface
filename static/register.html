@@ -53,11 +53,16 @@
       </div>
     </div>
 
-    <button class="btn btn-success" id="registerBtn">
-      <span>📸</span> Capture & Register
-    </button>
+    <div id="resultMsg" class="result-msg" style="margin-bottom: 15px;"></div>
 
-    <div id="resultMsg" class="result-msg"></div>
+    <div style="display: flex; gap: 10px; flex-direction: column;">
+      <button class="btn btn-success" id="registerBtn">
+        <span>📸</span> Capture & Register
+      </button>
+      <button class="btn btn-danger" id="cancelBtn" style="display: none;">
+        <span>🚫</span> Cancel
+      </button>
+    </div>
   </div>
 
 </div><!-- /container -->
@@ -103,10 +108,37 @@
       placeholder.innerHTML = `<div class="cam-placeholder-icon">⚠️</div><div style="color:var(--danger)">Cannot open camera<br><small>${err.message}</small></div>`;
     });
 
+  const cancelBtn = document.getElementById('cancelBtn');
+
+  let captureTargets = ["straight", "left", "right"];
+  let currentTargetIdx = 0;
+  let capturedBlobs = [];
+  let analyzing = false;
+  let isCapturing = false;
+  let timeoutId = null;
+  let stableStartTime = 0;
+  const STABLE_DURATION = 300; // ms to hold still
+  const TIMEOUT_DURATION = 20000; // 20s
+
+  cancelBtn.addEventListener('click', () => {
+    resetCaptureState();
+    showResult('error', 'Capture cancelled by user.');
+  });
+
+  function resetCaptureState() {
+    isCapturing = false;
+    analyzing = false;
+    clearTimeout(timeoutId);
+    registerBtn.style.display = 'block';
+    cancelBtn.style.display = 'none';
+    registerBtn.disabled = false;
+    registerBtn.innerHTML = '<span>📸</span> Capture & Register';
+    document.querySelector('.guide-overlay').style.borderColor = 'rgba(255, 255, 255, 0.2)';
+  }
+
   // ── Register ──
   registerBtn.addEventListener('click', async () => {
     const name = nameInput.value.trim();
-    
     if (!name) {
       showResult('error', 'Please enter the employee name!');
       nameInput.focus();
@@ -114,31 +146,120 @@
     }
 
     if (registerBtn.disabled) return;
-    registerBtn.disabled = true;
-    const originalBtnHtml = registerBtn.innerHTML;
-    registerBtn.innerHTML = '<span class="spinner"></span> Processing...';
-    showResult('info', 'Extracting face features...');
+    
+    isCapturing = true;
+    currentTargetIdx = 0;
+    capturedBlobs = [];
+    stableStartTime = 0;
+    
+    registerBtn.style.display = 'none';
+    cancelBtn.style.display = 'block';
+    
+    timeoutId = setTimeout(() => {
+        if (isCapturing) {
+            resetCaptureState();
+            showResult('error', 'Timeout: Could not capture all poses within 20 seconds.');
+        }
+    }, TIMEOUT_DURATION);
+
+    showResult('info', 'Starting capture sequence...');
+    analyzeLoop();
+  });
+
+  async function analyzeLoop() {
+    if (!isCapturing) return;
+    if (currentTargetIdx >= captureTargets.length) {
+       uploadCapturedBlobs();
+       return;
+    }
+    
+    if (analyzing) return;
+    analyzing = true;
+    
+    const target = captureTargets[currentTargetIdx];
+    let instruction = "";
+    if (target === "straight") instruction = "Look STRAIGHT at the camera";
+    if (target === "left") instruction = "Turn your head slowly LEFT";
+    if (target === "right") instruction = "Turn your head slowly RIGHT";
+    
+    showResult('info', `Step ${currentTargetIdx + 1}/3: ${instruction}`);
 
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
-    // Mirror flip for DB image (matching what user sees on UI)
     const ctx = canvas.getContext('2d');
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0);
 
-    canvas.toBlob(async (blob) => {
-      const fd = new FormData();
-      fd.append('file', blob, 'capture.jpg');
-      fd.append('name', name);
+    try {
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.8));
+        const fd = new FormData();
+        fd.append('file', blob, 'frame.jpg');
+        
+        const resp = await fetch(`${API_BASE}/analyze_pose`, { method: 'POST', body: fd });
+        const data = await resp.json();
+        
+        if (data.has_face) {
+            const [pitch, yaw, roll] = data.pose;
+            let isMatch = false;
+            
+            // Note: yaw direction depends on mirror. Usually positive is looking left (from camera's perspective).
+            if (target === "straight" && Math.abs(yaw) < 15 && Math.abs(pitch) < 15) {
+                isMatch = true;
+            } else if (target === "left" && yaw > 25) { 
+                isMatch = true;
+            } else if (target === "right" && yaw < -25) {
+                isMatch = true;
+            }
+            
+            const overlay = document.querySelector('.guide-overlay');
+            if (isMatch) {
+                if (stableStartTime === 0) {
+                    stableStartTime = Date.now();
+                }
+                const holdTime = Date.now() - stableStartTime;
+                if (holdTime < STABLE_DURATION) {
+                    showResult('warning', 'Good! HOLD STILL...');
+                    overlay.style.borderColor = 'var(--warning)';
+                } else {
+                    capturedBlobs.push(blob);
+                    currentTargetIdx++;
+                    stableStartTime = 0;
+                    
+                    overlay.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                    setTimeout(() => { overlay.style.backgroundColor = 'transparent'; }, 100);
+                }
+            } else {
+                stableStartTime = 0;
+                overlay.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            }
+        }
+    } catch (err) {
+        console.error("Pose analysis error:", err);
+    }
+    
+    analyzing = false;
+    if (isCapturing) {
+        setTimeout(analyzeLoop, 200);
+    }
+  }
 
-      try {
-        const resp = await fetch(`${API_BASE}/register`, {
-          method: 'POST',
-          body: fd,
-          // headers: { 'X-API-Key': 'your-key' },
-        });
+  async function uploadCapturedBlobs() {
+    isCapturing = false;
+    clearTimeout(timeoutId);
+    
+    cancelBtn.style.display = 'none';
+    registerBtn.style.display = 'block';
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<span class="spinner"></span> Processing...';
+    showResult('info', 'Extracting and averaging 3 face angles...');
+    
+    const fd = new FormData();
+    capturedBlobs.forEach((b, i) => fd.append('files', b, `capture_${i}.jpg`));
+    fd.append('name', nameInput.value.trim());
 
+    try {
+        const resp = await fetch(`${API_BASE}/register`, { method: 'POST', body: fd });
         const data = await resp.json();
 
         if (resp.ok && data.status === 'success') {
@@ -147,15 +268,13 @@
         } else {
           showResult('error', `❌ Error: ${data.detail?.message || data.message || 'Unknown error'}`);
         }
+    } catch (err) {
+        showResult('error', '❌ Cannot connect to server.');
+    }
 
-      } catch (err) {
-        showResult('error', '❌ Cannot connect to server. Please check the server status.');
-      }
-
-      registerBtn.disabled = false;
-      registerBtn.innerHTML = originalBtnHtml;
-    }, 'image/jpeg', 0.95);
-  });
+    registerBtn.disabled = false;
+    registerBtn.innerHTML = '<span>📸</span> Capture & Register';
+  }
 
   // ── Helpers ──
   function showResult(type, msg) {

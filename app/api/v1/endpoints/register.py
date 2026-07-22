@@ -35,7 +35,7 @@ async def register_face(
     request: Request,
     name: str = Form(..., description="Employee Name"),
     emp_id: str | None = Form(None, description="Employee ID (Auto-generated UUID if empty)"),
-    file: UploadFile = File(..., description="Portrait image of the employee"),
+    files: list[UploadFile] = File(..., description="Portrait images of the employee from different angles"),
     engine: FaceEngine = Depends(get_face_engine),
     db: FaceDatabase = Depends(get_face_db),
 ) -> JSONResponse:
@@ -50,28 +50,40 @@ async def register_face(
     )
 
     try:
-        # --- Read & decode image ---
-        contents = await file.read()
-        image = Image.open(io.BytesIO(contents)).convert("RGB")
-        img_np = np.array(image)
-        img_bgr = img_np[:, :, ::-1].copy()
+        # --- Read & decode images ---
+        embeddings = []
+        best_img_bgr = None
+        
+        for file in files:
+            contents = await file.read()
+            image = Image.open(io.BytesIO(contents)).convert("RGB")
+            img_np = np.array(image)
+            img_bgr = img_np[:, :, ::-1].copy()
 
-        # --- Detect faces ---
-        faces = engine.get_faces(img_bgr)
-        if not faces:
+            faces = engine.get_faces(img_bgr)
+            if faces:
+                embeddings.append(faces[0].embedding)
+                if best_img_bgr is None:
+                    best_img_bgr = img_bgr
+
+        if not embeddings:
             logger.warning(
-                "[REGISTER] IP: %s | ID: '%s' | Name: '%s' | FAILED: No face detected.",
+                "[REGISTER] IP: %s | ID: '%s' | Name: '%s' | FAILED: No face detected in any image.",
                 client_ip, emp_id, name,
             )
             return JSONResponse(
                 content=RegisterResponse(
                     status="error",
-                    message="No face detected in the image. Please retake the photo.",
+                    message="No face detected in the images. Please retake the photos.",
                 ).model_dump()
             )
 
+        # Average embeddings
+        avg_embedding = np.mean(embeddings, axis=0)
+        avg_embedding = avg_embedding / np.linalg.norm(avg_embedding)
+        
         # --- Check if face already exists ---
-        embedding = faces[0].embedding
+        embedding = avg_embedding
         matched_emp_id, matched_name, score = db.match_face(embedding)
         
         if matched_emp_id is not None and matched_emp_id != emp_id:
@@ -90,10 +102,10 @@ async def register_face(
         # --- Save embedding to DB ---
         total = db.add_face(emp_id, name, embedding)
 
-        # --- Save original image to data/ for backup ---
+        # --- Save best original image to data/ for backup ---
         os.makedirs(settings.DATA_DIR, exist_ok=True)
         save_path = os.path.join(settings.DATA_DIR, f"{emp_id}_{name}.jpg")
-        cv2.imwrite(save_path, img_bgr)
+        cv2.imwrite(save_path, best_img_bgr)
 
         logger.info(
             "[REGISTER] ✅ Registration successful | ID: '%s' | Name: '%s' | IP: %s | Total DB: %d people.",
@@ -115,3 +127,34 @@ async def register_face(
             content={"status": "error", "message": str(exc)},
             status_code=500,
         )
+
+
+@router.post(
+    "/analyze_pose",
+    summary="Analyze head pose",
+    description="Analyzes a single frame and returns the head pose (pitch, yaw, roll).",
+)
+async def analyze_pose(
+    file: UploadFile = File(...),
+    engine: FaceEngine = Depends(get_face_engine),
+) -> JSONResponse:
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        img_np = np.array(image)
+        img_bgr = img_np[:, :, ::-1].copy()
+
+        faces = engine.get_faces(img_bgr)
+        if not faces:
+            return JSONResponse(content={"has_face": False})
+
+        pose = faces[0].pose  # [pitch, yaw, roll]
+        return JSONResponse(
+            content={
+                "has_face": True,
+                "pose": [float(p) for p in pose]
+            }
+        )
+    except Exception as exc:
+        logger.error("[ANALYZE_POSE] ERROR: %s", str(exc))
+        return JSONResponse(content={"has_face": False, "error": str(exc)})

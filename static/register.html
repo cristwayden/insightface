@@ -9,6 +9,129 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+
+  <!-- MediaPipe FaceMesh: chạy 100% trong browser, không cần gọi server -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+  <style>
+    /* ── Pose Steps ── */
+    .pose-steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      justify-content: center;
+    }
+    .pose-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      flex: 1;
+    }
+    .pose-step-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: all 0.3s ease;
+    }
+    .pose-step-icon.done {
+      background: rgba(34,197,94,0.18);
+      border-color: var(--success);
+      box-shadow: 0 0 12px rgba(34,197,94,0.3);
+    }
+    .pose-step-icon.active {
+      background: rgba(250,204,21,0.15);
+      border-color: var(--warning);
+      box-shadow: 0 0 14px rgba(250,204,21,0.35);
+      animation: pulse-step 0.9s infinite;
+    }
+    .pose-step-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-align: center;
+    }
+    .pose-step-label.active { color: var(--warning); }
+    .pose-step-label.done   { color: var(--success); }
+    @keyframes pulse-step {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.1); }
+    }
+
+    /* ── Face mesh canvas (đặt chồng lên video) ── */
+    #meshCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 5;
+      transform: scaleX(-1); /* mirror theo video */
+    }
+
+    /* ── Pose instruction label ── */
+    #poseIndicator {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 5px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+      display: none;
+    }
+
+    /* ── Hold progress ring (SVG ở giữa camera) ── */
+    #holdRing {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 9;
+      display: none;
+    }
+    #holdRing circle.track {
+      fill: none;
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 5;
+    }
+    #holdRing circle.fill {
+      fill: none;
+      stroke: var(--success);
+      stroke-width: 5;
+      stroke-linecap: round;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      transition: stroke-dashoffset 0.08s linear;
+    }
+
+    /* ── Capture flash ── */
+    .capture-flash {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.8);
+      border-radius: inherit;
+      z-index: 15;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.06s;
+    }
+    .capture-flash.show { opacity: 1; }
+  </style>
 </head>
 <body>
 <div class="container container-sm">
@@ -42,22 +165,36 @@
       <input type="text" id="employeeName" class="form-input" placeholder="Example: John Doe" autocomplete="off" />
     </div>
 
+    <!-- Pose step indicators (hiện khi đang capture) -->
+    <div class="pose-steps" id="poseSteps" style="display:none;"></div>
+
     <div class="form-label">Portrait Photo</div>
-    <div class="camera-wrap">
+    <div class="camera-wrap" style="position:relative;">
       <video id="video" autoplay playsinline></video>
-      <canvas id="canvas"></canvas>
-      <div class="guide-overlay"></div>
+      <canvas id="canvas" style="display:none;"></canvas>
+      <canvas id="meshCanvas"></canvas>
+
+      <!-- Hold ring SVG -->
+      <svg id="holdRing" width="90" height="90" viewBox="0 0 90 90">
+        <circle class="track" cx="45" cy="45" r="38"/>
+        <circle class="fill" id="ringFill" cx="45" cy="45" r="38"
+          stroke-dasharray="238.76"
+          stroke-dashoffset="238.76"/>
+      </svg>
+
+      <div id="poseIndicator"></div>
       <div class="cam-placeholder" id="camPlaceholder">
         <div class="cam-placeholder-icon">📷</div>
         <div>Initializing camera...</div>
       </div>
+      <div class="capture-flash" id="captureFlash"></div>
     </div>
 
     <div id="resultMsg" class="result-msg" style="margin-bottom: 15px;"></div>
 
     <div style="display: flex; gap: 10px; flex-direction: column;">
       <button class="btn btn-success" id="registerBtn">
-        <span>📸</span> Capture & Register
+        <span>📸</span> Capture &amp; Register
       </button>
       <button class="btn btn-danger" id="cancelBtn" style="display: none;">
         <span>🚫</span> Cancel
@@ -68,24 +205,59 @@
 </div><!-- /container -->
 
 <script>
+  // ─────────────────────────────────────────────
+  //  CONFIG
+  // ─────────────────────────────────────────────
   const API_BASE = window.location.protocol.startsWith('http')
     ? `${window.location.origin}/api/v1`
     : 'http://127.0.0.1:5005/api/v1';
 
-  const video       = document.getElementById('video');
-  const canvas      = document.getElementById('canvas');
-  const registerBtn = document.getElementById('registerBtn');
-  const nameInput   = document.getElementById('employeeName');
-  const resultMsg   = document.getElementById('resultMsg');
-  const placeholder = document.getElementById('camPlaceholder');
+  // Trình tự góc cần chụp
+  const CAPTURE_TARGETS = [
+    { id: 'straight', label: 'Nhìn THẲNG',  emoji: '😐', check: p => Math.abs(p.yaw) < 13 && Math.abs(p.pitch) < 13 },
+    { id: 'left',     label: 'Quay TRÁI ←', emoji: '👈', check: p => p.yaw > 22 },
+    { id: 'right',    label: 'Quay PHẢI →', emoji: '👉', check: p => p.yaw < -22 },
+  ];
 
-  // ── Server health check ──
+
+  const STABLE_MS  = 600;   // ms giữ pose trước khi chụp
+  const TIMEOUT_MS = 60000; // timeout toàn bộ phiên
+  const RING_CIRC  = 238.76; // 2 * PI * 38 (radius vòng tròn SVG)
+
+  // ─────────────────────────────────────────────
+  //  DOM refs
+  // ─────────────────────────────────────────────
+  const video         = document.getElementById('video');
+  const canvas        = document.getElementById('canvas');
+  const meshCanvas    = document.getElementById('meshCanvas');
+  const registerBtn   = document.getElementById('registerBtn');
+  const cancelBtn     = document.getElementById('cancelBtn');
+  const nameInput     = document.getElementById('employeeName');
+  const resultMsg     = document.getElementById('resultMsg');
+  const placeholder   = document.getElementById('camPlaceholder');
+  const poseStepsEl   = document.getElementById('poseSteps');
+  const poseIndicator = document.getElementById('poseIndicator');
+  const holdRing      = document.getElementById('holdRing');
+  const ringFill      = document.getElementById('ringFill');
+  const captureFlash  = document.getElementById('captureFlash');
+
+  // ─────────────────────────────────────────────
+  //  State
+  // ─────────────────────────────────────────────
+  let isCapturing   = false;
+  let currentStep   = 0;
+  let capturedBlobs = [];
+  let stableStart   = 0;
+  let timeoutId     = null;
+  let faceMeshReady = false;
+  let mpCamera      = null;
+
+  // ─────────────────────────────────────────────
+  //  Server health check
+  // ─────────────────────────────────────────────
   async function checkServer() {
     try {
-      const healthUrl = window.location.protocol.startsWith('http')
-        ? '/'
-        : 'http://127.0.0.1:5005/';
-      const r = await fetch(healthUrl);
+      const r = await fetch(window.location.protocol.startsWith('http') ? '/' : 'http://127.0.0.1:5005/');
       if (r.ok) {
         document.getElementById('statusDot').style.background = 'var(--success)';
         document.getElementById('statusText').textContent = 'Server online';
@@ -98,92 +270,198 @@
   checkServer();
   setInterval(checkServer, 10000);
 
-  // ── Camera ──
+  // ─────────────────────────────────────────────
+  //  Camera
+  // ─────────────────────────────────────────────
   navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } })
     .then(stream => {
       video.srcObject = stream;
       placeholder.style.display = 'none';
+      // Khoi dong MediaPipe ngay khi camera san sang
+      // => Oval hien thi ngay khi phat hien khuon mat, khong can bam nut
+      video.addEventListener('loadeddata', () => initFaceMesh(), { once: true });
     })
     .catch(err => {
-      placeholder.innerHTML = `<div class="cam-placeholder-icon">⚠️</div><div style="color:var(--danger)">Cannot open camera<br><small>${err.message}</small></div>`;
+      placeholder.innerHTML = `<div class="cam-placeholder-icon">⚠️</div><div style="color:var(--danger)">Không mở được camera<br><small>${err.message}</small></div>`;
     });
 
-  const cancelBtn = document.getElementById('cancelBtn');
+  // ─────────────────────────────────────────────
+  //  MediaPipe FaceMesh — head pose từ 468 landmarks
+  //  Hoàn toàn chạy trong browser, 0 request server
+  // ─────────────────────────────────────────────
 
-  let captureTargets = ["straight", "left", "right"];
-  let currentTargetIdx = 0;
-  let capturedBlobs = [];
-  let analyzing = false;
-  let isCapturing = false;
-  let timeoutId = null;
-  let stableStartTime = 0;
-  const STABLE_DURATION = 300; // ms to hold still
-  const TIMEOUT_DURATION = 20000; // 20s
+  /**
+   * Ước tính yaw/pitch từ landmark MediaPipe.
+   * Dùng tỉ lệ vị trí mũi so với 2 gò má (yaw) và so với cằm-trán (pitch).
+   */
+  function estimatePose(lm) {
+    const nose      = lm[1];
+    const chin      = lm[152];
+    const forehead  = lm[10];
+    const leftCheek  = lm[234];
+    const rightCheek = lm[454];
 
-  cancelBtn.addEventListener('click', () => {
-    resetCaptureState();
-    showResult('error', 'Capture cancelled by user.');
-  });
+    const faceW = Math.abs(rightCheek.x - leftCheek.x) || 0.001;
+    const faceH = Math.abs(chin.y - forehead.y)         || 0.001;
 
-  function resetCaptureState() {
-    isCapturing = false;
-    analyzing = false;
-    clearTimeout(timeoutId);
-    registerBtn.style.display = 'block';
-    cancelBtn.style.display = 'none';
-    registerBtn.disabled = false;
-    registerBtn.innerHTML = '<span>📸</span> Capture & Register';
-    document.querySelector('.guide-overlay').style.borderColor = 'rgba(255, 255, 255, 0.2)';
+    const midX  = (leftCheek.x + rightCheek.x) / 2;
+    const midY  = (chin.y + forehead.y) / 2;
+
+    // Scale ra "độ" xấp xỉ
+    const yaw   = ((nose.x - midX) / faceW) * 90;
+    const pitch = ((nose.y - midY) / faceH) * 70;
+
+    return { yaw, pitch };
   }
 
-  // ── Register ──
-  registerBtn.addEventListener('click', async () => {
-    const name = nameInput.value.trim();
-    if (!name) {
-      showResult('error', 'Please enter the employee name!');
-      nameInput.focus();
+  /**
+   * Ve oval bam theo khuon mat + dots landmark.
+   * isMatch: null=idle/khong bat, false=dang capture chua dung, true=dung pose
+   */
+  function drawMesh(lm, isMatch) {
+    const w = meshCanvas.width  = video.videoWidth  || 640;
+    const h = meshCanvas.height = video.videoHeight || 480;
+    const ctx = meshCanvas.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+
+    // --- Tinh bounding box tu cac landmark vien mat ---
+    const OVAL_IDX = [
+      10,338,297,332,284,251,389,356,454,323,361,288,
+      397,365,379,378,400,377,152,148,176,149,150,136,
+      172,58,132,93,234,127,162,21,54,103,67,109
+    ];
+    let minX=1, maxX=0, minY=1, maxY=0;
+    for (const i of OVAL_IDX) {
+      const p = lm[i];
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+    const pad = 0.018;
+    const cx  = ((minX + maxX) / 2) * w;
+    const cy  = ((minY + maxY) / 2) * h;
+    const rx  = ((maxX - minX) / 2 + pad) * w;
+    const ry  = ((maxY - minY) / 2 + pad * 1.4) * h;
+
+    // --- Ve oval ---
+    const color = isMatch === true ? '#4ade80'
+                : isMatch === false ? 'rgba(255,255,255,0.75)'
+                : 'rgba(255,255,255,0.35)';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = isMatch === true ? 3 : 2;
+    ctx.setLineDash(isMatch === null ? [10,6] : []);
+    ctx.shadowColor = isMatch === true ? '#4ade80' : 'transparent';
+    ctx.shadowBlur  = isMatch === true ? 12 : 0;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.shadowBlur = 0;
+
+    // --- Dots landmark (chi khi dang capture) ---
+    if (isCapturing) {
+      ctx.fillStyle = 'rgba(99,202,183,0.35)';
+      for (const p of lm) {
+        ctx.beginPath();
+        ctx.arc(p.x * w, p.y * h, 1.0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  /** Callback mỗi frame từ MediaPipe */
+  function onFaceResults(results) {
+    if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+      meshCanvas.getContext('2d').clearRect(0, 0, meshCanvas.width, meshCanvas.height);
+      if (isCapturing) {
+        poseIndicator.style.display = 'block';
+        poseIndicator.textContent = '🔍 Không thấy mặt';
+        poseIndicator.style.color = '#fbbf24';
+        holdRing.style.display = 'none';
+        stableStart = 0;
+      }
       return;
     }
 
-    if (registerBtn.disabled) return;
-    
-    isCapturing = true;
-    currentTargetIdx = 0;
-    capturedBlobs = [];
-    stableStartTime = 0;
-    
-    registerBtn.style.display = 'none';
-    cancelBtn.style.display = 'block';
-    
-    timeoutId = setTimeout(() => {
-        if (isCapturing) {
-            resetCaptureState();
-            showResult('error', 'Timeout: Could not capture all poses within 20 seconds.');
-        }
-    }, TIMEOUT_DURATION);
+    const lm   = results.multiFaceLandmarks[0];
+    const pose = estimatePose(lm);
 
-    showResult('info', 'Starting capture sequence...');
-    analyzeLoop();
-  });
-
-  async function analyzeLoop() {
-    if (!isCapturing) return;
-    if (currentTargetIdx >= captureTargets.length) {
-       uploadCapturedBlobs();
-       return;
+    if (isCapturing) {
+      const isMatch = currentStep < CAPTURE_TARGETS.length
+        ? CAPTURE_TARGETS[currentStep].check(pose) : false;
+      drawMesh(lm, isMatch);
+      handleCapture(pose);
+    } else {
+      drawMesh(lm, null);
     }
-    
-    if (analyzing) return;
-    analyzing = true;
-    
-    const target = captureTargets[currentTargetIdx];
-    let instruction = "";
-    if (target === "straight") instruction = "Look STRAIGHT at the camera";
-    if (target === "left") instruction = "Turn your head slowly LEFT";
-    if (target === "right") instruction = "Turn your head slowly RIGHT";
-    
-    showResult('info', `Step ${currentTargetIdx + 1}/3: ${instruction}`);
+  }
 
+  /** Khởi tạo MediaPipe FaceMesh (lazy, chỉ gọi 1 lần) */
+  function initFaceMesh() {
+    if (faceMeshReady) return;
+    faceMeshReady = true;
+
+    const fm = new FaceMesh({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+    });
+    fm.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: false,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+    fm.onResults(onFaceResults);
+
+    mpCamera = new Camera(video, {
+      onFrame: async () => { await fm.send({ image: video }); },
+      width: 640,
+      height: 480,
+    });
+    mpCamera.start();
+  }
+
+  // ─────────────────────────────────────────────
+  //  Capture logic
+  // ─────────────────────────────────────────────
+  function handleCapture(pose) {
+    if (currentStep >= CAPTURE_TARGETS.length) return;
+
+    const target  = CAPTURE_TARGETS[currentStep];
+    const isMatch = target.check(pose);
+
+    // Update indicator text
+    poseIndicator.style.display = 'block';
+    if (isMatch) {
+      poseIndicator.textContent = '✅ Giữ nguyên...';
+      poseIndicator.style.color = '#4ade80';
+    } else {
+      poseIndicator.textContent = `Bước ${currentStep + 1}/${CAPTURE_TARGETS.length}: ${target.label}`;
+      poseIndicator.style.color = '#fff';
+    }
+
+    if (isMatch) {
+      if (stableStart === 0) stableStart = Date.now();
+      const held     = Date.now() - stableStart;
+      const progress = Math.min(held / STABLE_MS, 1);
+
+      holdRing.style.display = 'block';
+      ringFill.style.strokeDashoffset = RING_CIRC * (1 - progress);
+
+      if (held >= STABLE_MS) captureStep();
+    } else {
+      stableStart = 0;
+      holdRing.style.display = 'none';
+      ringFill.style.strokeDashoffset = RING_CIRC;
+    }
+  }
+
+  function captureStep() {
+    // Flash
+    captureFlash.classList.add('show');
+    setTimeout(() => captureFlash.classList.remove('show'), 160);
+
+    // Vẽ frame lên canvas (lật ngược mirror để gửi server đúng chiều)
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext('2d');
@@ -191,107 +469,154 @@
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0);
 
-    try {
-        const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.8));
-        const fd = new FormData();
-        fd.append('file', blob, 'frame.jpg');
-        
-        const resp = await fetch(`${API_BASE}/analyze_pose`, { method: 'POST', body: fd });
-        const data = await resp.json();
-        
-        if (data.has_face) {
-            const [pitch, yaw, roll] = data.pose;
-            let isMatch = false;
-            
-            // Note: yaw direction depends on mirror. Usually positive is looking left (from camera's perspective).
-            if (target === "straight" && Math.abs(yaw) < 15 && Math.abs(pitch) < 15) {
-                isMatch = true;
-            } else if (target === "left" && yaw > 25) { 
-                isMatch = true;
-            } else if (target === "right" && yaw < -25) {
-                isMatch = true;
-            }
-            
-            const overlay = document.querySelector('.guide-overlay');
-            if (isMatch) {
-                if (stableStartTime === 0) {
-                    stableStartTime = Date.now();
-                }
-                const holdTime = Date.now() - stableStartTime;
-                if (holdTime < STABLE_DURATION) {
-                    showResult('warning', 'Good! HOLD STILL...');
-                    overlay.style.borderColor = 'var(--warning)';
-                } else {
-                    capturedBlobs.push(blob);
-                    currentTargetIdx++;
-                    stableStartTime = 0;
-                    
-                    overlay.style.backgroundColor = 'rgba(255,255,255,0.5)';
-                    setTimeout(() => { overlay.style.backgroundColor = 'transparent'; }, 100);
-                }
-            } else {
-                stableStartTime = 0;
-                overlay.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-            }
-        }
-    } catch (err) {
-        console.error("Pose analysis error:", err);
-    }
-    
-    analyzing = false;
-    if (isCapturing) {
-        setTimeout(analyzeLoop, 200);
-    }
+    canvas.toBlob(blob => {
+      capturedBlobs.push(blob);
+
+      // Cập nhật icon step đã xong
+      const doneId = CAPTURE_TARGETS[currentStep].id;
+      document.getElementById(`icon-${doneId}`).className = 'pose-step-icon done';
+      document.getElementById(`lbl-${doneId}`).className  = 'pose-step-label done';
+
+      currentStep++;
+      stableStart = 0;
+      holdRing.style.display = 'none';
+      ringFill.style.strokeDashoffset = RING_CIRC;
+
+      if (currentStep >= CAPTURE_TARGETS.length) {
+        // Xong tất cả
+        isCapturing = false;
+        clearTimeout(timeoutId);
+        poseIndicator.style.display = 'none';
+        meshCanvas.getContext('2d').clearRect(0, 0, meshCanvas.width, meshCanvas.height);
+        uploadBlobs();
+      } else {
+        // Kích hoạt step tiếp theo
+        const nextId = CAPTURE_TARGETS[currentStep].id;
+        document.getElementById(`icon-${nextId}`).className = 'pose-step-icon active';
+        document.getElementById(`lbl-${nextId}`).className  = 'pose-step-label active';
+        showResult('info', `Bước ${currentStep + 1}/${CAPTURE_TARGETS.length}: ${CAPTURE_TARGETS[currentStep].label}`);
+      }
+    }, 'image/jpeg', 0.88);
   }
 
-  async function uploadCapturedBlobs() {
-    isCapturing = false;
+  // ─────────────────────────────────────────────
+  //  Build pose step indicators HTML
+  // ─────────────────────────────────────────────
+  function buildStepIcons() {
+    poseStepsEl.innerHTML = CAPTURE_TARGETS.map((t, i) => `
+      <div class="pose-step">
+        <div class="pose-step-icon${i === 0 ? ' active' : ''}" id="icon-${t.id}">${t.emoji}</div>
+        <div class="pose-step-label${i === 0 ? ' active' : ''}" id="lbl-${t.id}">${t.label}</div>
+      </div>
+    `).join('');
+  }
+
+  // ─────────────────────────────────────────────
+  //  Start / Cancel
+  // ─────────────────────────────────────────────
+  registerBtn.addEventListener('click', () => {
+    const name = nameInput.value.trim();
+    if (!name) {
+      showResult('error', 'Vui lòng nhập tên nhân viên!');
+      nameInput.focus();
+      return;
+    }
+    if (registerBtn.disabled) return;
+
+    // Lazy init MediaPipe
+    initFaceMesh();
+
+    isCapturing   = true;
+    currentStep   = 0;
+    capturedBlobs = [];
+    stableStart   = 0;
+
+    registerBtn.style.display = 'none';
+    cancelBtn.style.display   = 'block';
+
+    buildStepIcons();
+    poseStepsEl.style.display = 'flex';
+
+    showResult('info', `Bước 1/${CAPTURE_TARGETS.length}: ${CAPTURE_TARGETS[0].label}`);
+
+    timeoutId = setTimeout(() => {
+      if (isCapturing) {
+        resetState();
+        showResult('error', `⏱ Hết giờ: không chụp đủ ${CAPTURE_TARGETS.length} góc.`);
+      }
+    }, TIMEOUT_MS);
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    resetState();
+    showResult('error', 'Đã huỷ đăng ký.');
+  });
+
+  function resetState() {
+    isCapturing   = false;
+    currentStep   = 0;
+    capturedBlobs = [];
+    stableStart   = 0;
     clearTimeout(timeoutId);
-    
-    cancelBtn.style.display = 'none';
+
     registerBtn.style.display = 'block';
-    registerBtn.disabled = true;
-    registerBtn.innerHTML = '<span class="spinner"></span> Processing...';
-    showResult('info', 'Extracting and averaging 3 face angles...');
-    
+    registerBtn.disabled = false;
+    registerBtn.innerHTML = '<span>📸</span> Capture &amp; Register';
+    cancelBtn.style.display = 'none';
+    poseStepsEl.style.display = 'none';
+    poseIndicator.style.display = 'none';
+    holdRing.style.display = 'none';
+    ringFill.style.strokeDashoffset = RING_CIRC;
+    guideOverlay.style.borderColor = 'rgba(255,255,255,0.2)';
+    meshCanvas.getContext('2d').clearRect(0, 0, meshCanvas.width, meshCanvas.height);
+  }
+
+  // ─────────────────────────────────────────────
+  //  Upload — gọi server DUY NHẤT 1 lần
+  // ─────────────────────────────────────────────
+  async function uploadBlobs() {
+    cancelBtn.style.display   = 'none';
+    registerBtn.style.display = 'block';
+    registerBtn.disabled      = true;
+    registerBtn.innerHTML     = '<span class="spinner"></span> Processing...';
+    showResult('info', `⚙️ Đang xử lý ${capturedBlobs.length} ảnh...`);
+
     const fd = new FormData();
-    capturedBlobs.forEach((b, i) => fd.append('files', b, `capture_${i}.jpg`));
+    capturedBlobs.forEach((b, i) => fd.append('files', b, `cap_${i}.jpg`));
     fd.append('name', nameInput.value.trim());
 
     try {
-        const resp = await fetch(`${API_BASE}/register`, { method: 'POST', body: fd });
-        const data = await resp.json();
+      const resp = await fetch(`${API_BASE}/register`, { method: 'POST', body: fd });
+      const data = await resp.json();
 
-        if (resp.ok && data.status === 'success') {
-          showResult('success', `✅ ${data.message}`);
-          nameInput.value = '';
-        } else {
-          showResult('error', `❌ Error: ${data.detail?.message || data.message || 'Unknown error'}`);
-        }
-    } catch (err) {
-        showResult('error', '❌ Cannot connect to server.');
+      if (resp.ok && data.status === 'success') {
+        showResult('success', `✅ ${data.message}`);
+        nameInput.value = '';
+        poseStepsEl.style.display = 'none';
+      } else {
+        showResult('error', `❌ ${data.detail?.message || data.message || 'Lỗi không xác định'}`);
+        poseStepsEl.style.display = 'none';
+      }
+    } catch {
+      showResult('error', '❌ Không kết nối được server.');
+      poseStepsEl.style.display = 'none';
     }
 
     registerBtn.disabled = false;
-    registerBtn.innerHTML = '<span>📸</span> Capture & Register';
+    registerBtn.innerHTML = '<span>📸</span> Capture &amp; Register';
   }
 
-  // ── Helpers ──
+  // ─────────────────────────────────────────────
+  //  Helpers
+  // ─────────────────────────────────────────────
   function showResult(type, msg) {
     resultMsg.className = `result-msg ${type}`;
-    resultMsg.innerHTML = escHtml(msg);
+    resultMsg.textContent = msg;
   }
 
-  function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-  
-  function handleEnter(e) {
-    if (e.key === 'Enter') {
-      registerBtn.click();
-    }
-  }
-  nameInput.addEventListener('keypress', handleEnter);
+  nameInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') registerBtn.click();
+  });
 </script>
 </body>
 </html>

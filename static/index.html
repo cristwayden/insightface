@@ -300,7 +300,7 @@
       ? '<span class="badge badge-real">🟢 Real Person</span>'
       : '<span class="badge badge-fake">🔴 SPOOFING DETECTED</span>';
 
-    const displayName = face.emp_id ? `[${face.emp_id}] ${face.name}` : face.name;
+    const displayName = face.name;
 
     identityEl.className = `identity-card ${cls}`;
     identityEl.innerHTML = `
@@ -391,7 +391,7 @@
   function addHistory(face) {
     let displayName = 'Not found';
     if (face) {
-      displayName = face.emp_id ? `[${face.emp_id}] ${face.name}` : face.name;
+      displayName = face.name;
     }
     const item = face
       ? { name: displayName, real: face.is_real, score: face.score, time: now() }

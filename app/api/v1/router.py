@@ -9,7 +9,7 @@ Security:
 """
 from fastapi import APIRouter, Depends
 
-from app.api.v1.endpoints import logs, recognize, register
+from app.api.v1.endpoints import faces, logs, recognize, register
 from app.core.security import verify_api_key
 
 # dependencies=[...] here applies to ALL routes included in this router
@@ -20,3 +20,4 @@ api_v1_router = APIRouter(
 api_v1_router.include_router(recognize.router, tags=["Recognition"])
 api_v1_router.include_router(register.router, tags=["Registration"])
 api_v1_router.include_router(logs.router, tags=["Monitoring"])
+api_v1_router.include_router(faces.router, tags=["Management"])

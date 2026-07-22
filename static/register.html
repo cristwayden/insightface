@@ -25,6 +25,7 @@
     <nav>
       <a class="nav-btn" href="/" id="nav-recognize">Recognize</a>
       <a class="nav-btn active" href="/register" id="nav-register">Register</a>
+      <a class="nav-btn" href="/manage" id="nav-manage">Manage</a>
     </nav>
     <div class="status-bar" id="statusBar">
       <div class="status-dot" id="statusDot"></div>
@@ -69,7 +70,6 @@
   const video       = document.getElementById('video');
   const canvas      = document.getElementById('canvas');
   const registerBtn = document.getElementById('registerBtn');
-  const idInput     = document.getElementById('employeeId');
   const nameInput   = document.getElementById('employeeName');
   const resultMsg   = document.getElementById('resultMsg');
   const placeholder = document.getElementById('camPlaceholder');
@@ -143,7 +143,6 @@
 
         if (resp.ok && data.status === 'success') {
           showResult('success', `✅ ${data.message}`);
-          idInput.value = ''; // Reset input
           nameInput.value = '';
         } else {
           showResult('error', `❌ Error: ${data.detail?.message || data.message || 'Unknown error'}`);
@@ -173,7 +172,6 @@
       registerBtn.click();
     }
   }
-  idInput.addEventListener('keypress', handleEnter);
   nameInput.addEventListener('keypress', handleEnter);
 </script>
 </body>

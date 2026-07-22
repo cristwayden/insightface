@@ -147,6 +147,15 @@ async def serve_register_page():
     return JSONResponse(status_code=404, content={"status": "error", "detail": "register.html not found"})
 
 
+@app.get("/manage", include_in_schema=False)
+async def serve_manage_page():
+    """Serve manage.html at /manage"""
+    manage_file = os.path.join(_static_dir, "manage.html")
+    if os.path.isfile(manage_file):
+        return FileResponse(manage_file)
+    return JSONResponse(status_code=404, content={"status": "error", "detail": "manage.html not found"})
+
+
 # Mount static assets (styles.css, js files, images...)
 if os.path.isdir(_static_dir):
     app.mount("/static", StaticFiles(directory=_static_dir), name="static")

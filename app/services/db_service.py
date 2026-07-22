@@ -134,6 +134,45 @@ class FaceDatabase:
             self.save()
             return len(self._emp_ids)
 
+    def list_faces(self) -> list[dict]:
+        """Return all registered faces as a list of dicts (no embeddings)."""
+        with self._lock:
+            return [
+                {"emp_id": eid, "name": name}
+                for eid, name in zip(self._emp_ids, self._names)
+            ]
+
+    def delete_face(self, emp_id: str) -> bool:
+        """
+        Delete a face by emp_id.
+        Returns True if deleted, False if not found.
+        """
+        with self._lock:
+            if emp_id not in self._emp_ids:
+                return False
+            idx = self._emp_ids.index(emp_id)
+            self._emp_ids.pop(idx)
+            self._names.pop(idx)
+            self._embeddings.pop(idx)
+            self.save()
+            logger.info("Deleted face ID: '%s'", emp_id)
+            return True
+
+    def rename_face(self, emp_id: str, new_name: str) -> bool:
+        """
+        Rename (update) the name of a face by emp_id.
+        Returns True if updated, False if not found.
+        """
+        with self._lock:
+            if emp_id not in self._emp_ids:
+                return False
+            idx = self._emp_ids.index(emp_id)
+            old_name = self._names[idx]
+            self._names[idx] = new_name
+            self.save()
+            logger.info("Renamed face ID: '%s' from '%s' → '%s'", emp_id, old_name, new_name)
+            return True
+
     def match_face(
         self, target_embedding: np.ndarray, threshold: float | None = None
     ) -> tuple[str | None, str, float]:

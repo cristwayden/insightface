@@ -17,4 +17,4 @@ if ($existing) {
 }
 
 Write-Host "Starting server..." -ForegroundColor Cyan
-python -m uvicorn app.main:app --host 0.0.0.0 --port 5005 --reload
+python -m uvicorn app.main:app --host 0.0.0.0 --port 5005 --reload --reload-dir app

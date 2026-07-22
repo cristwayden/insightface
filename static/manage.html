@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InsightFace — Manage Database</title>
+  <meta name="description" content="Manage registered faces in the database" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .table-wrapper { overflow-x: auto; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-muted); font-weight: 500; font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { font-size: 0.95em; }
+    tr:last-child td { border-bottom: none; }
+    .action-btn { background: none; border: none; cursor: pointer; font-size: 1.2em; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
+    .action-btn:hover { background: var(--bg-glass); }
+    .btn-edit { color: var(--warning); }
+    .btn-delete { color: var(--danger); }
+  </style>
+</head>
+<body>
+<div class="container container-sm" style="max-width: 900px;">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">👁</div>
+      <div class="logo-text">
+        <h1>InsightFace</h1>
+        <p>Manage Database</p>
+      </div>
+    </div>
+    <nav>
+      <a class="nav-btn" href="/" id="nav-recognize">Recognize</a>
+      <a class="nav-btn" href="/register" id="nav-register">Register</a>
+      <a class="nav-btn active" href="/manage" id="nav-manage">Manage</a>
+    </nav>
+    <div class="status-bar" id="statusBar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="card">
+    <div class="card-title">👥 Registered Faces (<span id="totalCount">0</span>)</div>
+    
+    <div class="table-wrapper">
+      <table id="facesTable">
+        <thead>
+          <tr>
+            <th>Employee ID</th>
+            <th>Name</th>
+            <th style="width: 120px; text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="facesTbody">
+          <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+  const API_BASE = window.location.protocol.startsWith('http')
+    ? `${window.location.origin}/api/v1`
+    : 'http://127.0.0.1:5005/api/v1';
+
+  // ── Server health check ──
+  async function checkServer() {
+    try {
+      const healthUrl = window.location.protocol.startsWith('http')
+        ? '/'
+        : 'http://127.0.0.1:5005/';
+      const r = await fetch(healthUrl);
+      if (r.ok) {
+        document.getElementById('statusDot').style.background = 'var(--success)';
+        document.getElementById('statusText').textContent = 'Server online';
+      } else throw new Error();
+    } catch {
+      document.getElementById('statusDot').style.background = 'var(--danger)';
+      document.getElementById('statusText').textContent = 'Server offline';
+    }
+  }
+  checkServer();
+  setInterval(checkServer, 10000);
+
+  // ── Load Faces ──
+  async function loadFaces() {
+    try {
+      const resp = await fetch(`${API_BASE}/faces`);
+      const data = await resp.json();
+      
+      const tbody = document.getElementById('facesTbody');
+      const count = document.getElementById('totalCount');
+      
+      if (resp.ok && data.status === 'success') {
+        count.textContent = data.total;
+        
+        if (data.total === 0) {
+           tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">No faces registered in database.</td></tr>';
+           return;
+        }
+
+        tbody.innerHTML = data.faces.map(face => `
+          <tr>
+            <td style="font-family: monospace; font-size: 0.9em; color: var(--text-muted);">${escHtml(face.emp_id)}</td>
+            <td style="font-weight: 500;">${escHtml(face.name)}</td>
+            <td style="text-align: center;">
+              <button class="action-btn btn-edit" title="Rename" onclick="renameFace('${escHtml(face.emp_id)}', '${escHtml(face.name)}')">✏️</button>
+              <button class="action-btn btn-delete" title="Delete" onclick="deleteFace('${escHtml(face.emp_id)}', '${escHtml(face.name)}')">🗑️</button>
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger); padding: 30px;">Error loading data: ${data.detail || data.message || 'Unknown error'}</td></tr>`;
+      }
+    } catch (e) {
+      document.getElementById('facesTbody').innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--danger); padding: 30px;">❌ Cannot connect to server.</td></tr>`;
+    }
+  }
+
+  // ── Delete ──
+  async function deleteFace(empId, name) {
+    if (!confirm(`Are you sure you want to delete the face data for "${name}"?\nThis action cannot be undone.`)) return;
+    
+    try {
+      const resp = await fetch(`${API_BASE}/faces/${empId}`, { method: 'DELETE' });
+      if (resp.ok) {
+        loadFaces();
+      } else {
+        const data = await resp.json();
+        alert(`Error: ${data.detail || data.message || 'Failed to delete'}`);
+      }
+    } catch (e) {
+      alert("Network error while trying to connect to the server.");
+    }
+  }
+
+  // ── Rename ──
+  async function renameFace(empId, oldName) {
+    const newName = prompt(`Enter new name for "${oldName}":`, oldName);
+    if (newName === null) return; // cancelled
+    
+    const trimmed = newName.trim();
+    if (trimmed === oldName || trimmed === '') return;
+    
+    try {
+      const resp = await fetch(`${API_BASE}/faces/${empId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed })
+      });
+      if (resp.ok) {
+        loadFaces();
+      } else {
+        const data = await resp.json();
+        alert(`Error: ${data.detail || data.message || 'Failed to rename'}`);
+      }
+    } catch (e) {
+      alert("Network error while trying to connect to the server.");
+    }
+  }
+
+  // ── Helpers ──
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Init
+  loadFaces();
+</script>
+</body>
+</html>

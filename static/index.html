@@ -133,6 +133,57 @@
   let stats = { total: 0, match: 0, fake: 0 };
   let historyItems = [];
 
+  // ── GPS Tracking ──
+  let currentLat = null;
+  let currentLng = null;
+
+  async function fetchIPLocation() {
+    try {
+      const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+      const data = await res.json();
+      if (currentLat === null) { // Only set if browser GPS didn't already get it
+        currentLat = data.latitude;
+        currentLng = data.longitude;
+        console.log("GPS Location (Fallback IP):", currentLat, currentLng);
+      }
+    } catch (e) {
+      console.warn("IP Geolocation failed:", e);
+    }
+  }
+
+  if (navigator.geolocation) {
+    // Try to get high accuracy GPS first
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+        console.log("GPS Location (Browser):", currentLat, currentLng);
+      },
+      (err) => {
+        console.warn("Browser GPS error:", err.message);
+        fetchIPLocation(); // Fallback if user denied or PC has no GPS
+      },
+      { enableHighAccuracy: true, timeout: 4000 }
+    );
+
+    // Keep watching if user moves
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        currentLat = pos.coords.latitude;
+        currentLng = pos.coords.longitude;
+      },
+      (err) => {}, // Ignore watch errors if already handled
+      { enableHighAccuracy: true, maximumAge: 10000 }
+    );
+  } else {
+    fetchIPLocation();
+  }
+
+  // If after 3 seconds GPS is still null, trigger fallback anyway
+  setTimeout(() => {
+    if (currentLat === null) fetchIPLocation();
+  }, 3000);
+
   // ── Server health check ──
   async function checkServer() {
     try {
@@ -198,6 +249,10 @@
     canvas.toBlob(async (blob) => {
       const fd = new FormData();
       fd.append('file', blob, 'capture.jpg');
+      if (currentLat !== null && currentLng !== null) {
+        fd.append('latitude', currentLat);
+        fd.append('longitude', currentLng);
+      }
 
       try {
         const resp = await fetch(`${API_BASE}/recognize`, {
@@ -267,8 +322,8 @@
       </div>
     `;
 
-    // Fake box position (center of video)
-    showFaceBox(displayName, isReal);
+    // Real bbox position from API
+    showFaceBox(displayName, isReal, face.bbox);
   }
 
   function renderNoFace() {
@@ -292,19 +347,41 @@
   }
 
   // ── Face box overlay ──
-  function showFaceBox(name, isReal) {
+  function showFaceBox(name, isReal, bbox) {
     faceBox.style.display = 'block';
     faceBox.style.border  = `2px solid ${isReal ? 'var(--success)' : 'var(--danger)'}`;
     faceLabel.textContent = name;
     faceLabel.style.background = isReal ? 'var(--success)' : 'var(--danger)';
 
-    // Simple centered box (real bbox would require canvas overlay)
-    const w = video.offsetWidth, h = video.offsetHeight;
-    const bw = Math.round(w * .35), bh = Math.round(h * .5);
-    faceBox.style.left   = `${Math.round((w-bw)/2)}px`;
-    faceBox.style.top    = `${Math.round((h-bh)/2)}px`;
-    faceBox.style.width  = `${bw}px`;
-    faceBox.style.height = `${bh}px`;
+    if (bbox && bbox.length === 4) {
+      const [x1, y1, x2, y2] = bbox;
+      const vw = video.videoWidth || 640;
+      const vh = video.videoHeight || 480;
+      const cw = video.offsetWidth;
+      const ch = video.offsetHeight;
+
+      // Map from video resolution to displayed size
+      const scaleX = cw / vw;
+      const scaleY = ch / vh;
+      
+      let bx = x1 * scaleX;
+      let by = y1 * scaleY;
+      let bw = (x2 - x1) * scaleX;
+      let bh = (y2 - y1) * scaleY;
+
+      faceBox.style.left   = `${Math.round(bx)}px`;
+      faceBox.style.top    = `${Math.round(by)}px`;
+      faceBox.style.width  = `${Math.round(bw)}px`;
+      faceBox.style.height = `${Math.round(bh)}px`;
+    } else {
+      // Fallback
+      const w = video.offsetWidth, h = video.offsetHeight;
+      const bw = Math.round(w * .35), bh = Math.round(h * .5);
+      faceBox.style.left   = `${Math.round((w-bw)/2)}px`;
+      faceBox.style.top    = `${Math.round((h-bh)/2)}px`;
+      faceBox.style.width  = `${bw}px`;
+      faceBox.style.height = `${bh}px`;
+    }
 
     setTimeout(hideFaceBox, 3000);
   }

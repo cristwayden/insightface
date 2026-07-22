@@ -6,7 +6,7 @@ import io
 from datetime import datetime
 
 import numpy as np
-from fastapi import APIRouter, Depends, File, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
 from PIL import Image
 
@@ -30,12 +30,14 @@ router = APIRouter()
 async def recognize_face(
     request: Request,
     file: UploadFile = File(..., description="Image containing faces to recognize"),
+    latitude: float | None = Form(None, description="GPS Latitude"),
+    longitude: float | None = Form(None, description="GPS Longitude"),
     engine: FaceEngine = Depends(get_face_engine),
     db: FaceDatabase = Depends(get_face_db),
 ) -> JSONResponse:
     client_ip = request.client.host
     start_time = datetime.now()
-    logger.info("[RECOGNIZE] Request from IP: %s | File: %s", client_ip, file.filename)
+    logger.info("[RECOGNIZE] Request from IP: %s | File: %s | GPS: %s, %s", client_ip, file.filename, latitude, longitude)
 
     try:
         # --- Read & decode image ---
@@ -58,8 +60,8 @@ async def recognize_face(
 
             liveness_tag = "REAL" if is_real else "⚠ FAKE"
             logger.info(
-                "[RECOGNIZE] IP: %s | ID: %s | Name: %s | Match: %.4f | Liveness: %.4f | %s",
-                client_ip, emp_id, name, score, liveness_score, liveness_tag,
+                "[RECOGNIZE] IP: %s | GPS: %s, %s | ID: %s | Name: %s | Match: %.4f | Liveness: %.4f | %s",
+                client_ip, latitude, longitude, emp_id, name, score, liveness_score, liveness_tag,
             )
             if not is_real:
                 logger.warning(

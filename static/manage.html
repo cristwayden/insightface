@@ -23,7 +23,7 @@
   </style>
 </head>
 <body>
-<div class="container container-sm" style="max-width: 900px;">
+<div class="container container-sm" style="max-width: 1400px;">
 
   <!-- Header -->
   <header>
@@ -46,24 +46,52 @@
   </header>
 
   <!-- Main Content -->
-  <div class="card">
-    <div class="card-title">👥 Registered Faces (<span id="totalCount">0</span>)</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; margin-top: 20px;">
     
-    <div class="table-wrapper">
-      <table id="facesTable">
-        <thead>
-          <tr>
-            <th>Employee ID</th>
-            <th>Name</th>
-            <th style="width: 120px; text-align: center;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="facesTbody">
-          <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading...</td></tr>
-        </tbody>
-      </table>
+    <!-- Registered Faces -->
+    <div class="card" style="margin-top: 0;">
+      <div class="card-title">👥 Registered Faces (<span id="totalCount">0</span>)</div>
+      
+      <div class="table-wrapper">
+        <table id="facesTable">
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Name</th>
+              <th style="width: 120px; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="facesTbody">
+            <tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
+
+    <!-- Logs Content -->
+    <div class="card" style="margin-top: 0;">
+      <div class="card-title">📋 Recognition Logs</div>
+      
+      <div class="table-wrapper">
+        <table id="logsTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Name</th>
+              <th>Match</th>
+              <th>Liveness</th>
+              <th>GPS</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="logsTbody">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Loading logs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div> <!-- /grid -->
 
 </div><!-- /container -->
 
@@ -168,6 +196,72 @@
     }
   }
 
+  // ── Load Logs ──
+  async function loadLogs() {
+    try {
+      const resp = await fetch(`${API_BASE}/logs?lines=500`);
+      const data = await resp.json();
+      
+      const tbody = document.getElementById('logsTbody');
+      
+      if (resp.ok && data.recent_logs) {
+        const parsedLogs = [];
+        
+        // Reverse to show newest first
+        const lines = data.recent_logs.reverse();
+        
+        for (const line of lines) {
+          if (line.includes('[RECOGNIZE] IP:')) {
+             // 2026-07-22 11:04:39 | INFO | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: ... | Name: loc | Match: 0.75 | Liveness: 0.98 | Bbox: [...] | REAL
+             const timeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+             const nameMatch = line.match(/Name:\s([^|]+)/);
+             const matchMatch = line.match(/Match:\s([\d.]+)/);
+             const liveMatch = line.match(/Liveness:\s([\d.]+)/);
+             const gpsMatch = line.match(/GPS:\s([^|]+)/);
+             
+             if (timeMatch && nameMatch) {
+                const isFake = line.includes('FAKE');
+                parsedLogs.push({
+                   time: timeMatch[1],
+                   name: nameMatch[1].trim(),
+                   match: matchMatch ? matchMatch[1].trim() : '-',
+                   liveness: liveMatch ? liveMatch[1].trim() : '-',
+                   gps: gpsMatch ? gpsMatch[1].trim() : '-',
+                   status: isFake ? 'FAKE' : 'REAL'
+                });
+             }
+          }
+        }
+        
+        if (parsedLogs.length === 0) {
+           tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">No recognition logs found.</td></tr>';
+           return;
+        }
+
+        // Only show top 50
+        tbody.innerHTML = parsedLogs.slice(0, 50).map(log => `
+          <tr>
+            <td style="font-family: monospace; font-size: 0.85em; color: var(--text-muted);">${escHtml(log.time)}</td>
+            <td style="font-weight: 500;">${escHtml(log.name)}</td>
+            <td>${escHtml(log.match)}</td>
+            <td>${escHtml(log.liveness)}</td>
+            <td style="font-size: 0.8em; color: var(--text-muted);">${escHtml(log.gps)}</td>
+            <td>
+              ${log.status === 'REAL' 
+                ? '<span class="badge" style="background: rgba(46,204,113,0.1); color: var(--success); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600;">REAL</span>' 
+                : '<span class="badge" style="background: rgba(231,76,60,0.1); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600;">FAKE</span>'}
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 30px;">Error loading logs: ${data.detail || data.message || 'Unknown error'}</td></tr>`;
+
+      }
+    } catch (e) {
+      document.getElementById('logsTbody').innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger); padding: 30px;">❌ Cannot connect to server to fetch logs.</td></tr>`;
+    }
+  }
+
   // ── Helpers ──
   function escHtml(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -175,6 +269,10 @@
 
   // Init
   loadFaces();
+  loadLogs();
+  
+  // Refresh logs every 10 seconds
+  setInterval(loadLogs, 10000);
 </script>
 </body>
 </html>

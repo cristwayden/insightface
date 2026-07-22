@@ -206,13 +206,9 @@
       
       if (resp.ok && data.recent_logs) {
         const parsedLogs = [];
-        
-        // Reverse to show newest first
         const lines = data.recent_logs.reverse();
-        
         for (const line of lines) {
           if (line.includes('[RECOGNIZE] IP:')) {
-             // 2026-07-22 11:04:39 | INFO | InsightFace.recognize | [RECOGNIZE] IP: 127.0.0.1 | ID: ... | Name: loc | Match: 0.75 | Liveness: 0.98 | Bbox: [...] | REAL
              const timeMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
              const nameMatch = line.match(/Name:\s([^|]+)/);
              const matchMatch = line.match(/Match:\s([\d.]+)/);
@@ -220,14 +216,15 @@
              const gpsMatch = line.match(/GPS:\s([^|]+)/);
              
              if (timeMatch && nameMatch) {
-                const isFake = line.includes('FAKE');
+                const name = nameMatch[1].trim();
+                const isMatched = name !== 'Stranger';
                 parsedLogs.push({
                    time: timeMatch[1],
-                   name: nameMatch[1].trim(),
+                   name: name,
                    match: matchMatch ? matchMatch[1].trim() : '-',
                    liveness: liveMatch ? liveMatch[1].trim() : '-',
                    gps: gpsMatch ? gpsMatch[1].trim() : '-',
-                   status: isFake ? 'FAKE' : 'REAL'
+                   status: isMatched ? 'MATCH' : 'UNMATCHED'
                 });
              }
           }
@@ -247,9 +244,9 @@
             <td>${escHtml(log.liveness)}</td>
             <td style="font-size: 0.8em; color: var(--text-muted);">${escHtml(log.gps)}</td>
             <td>
-              ${log.status === 'REAL' 
-                ? '<span class="badge" style="background: rgba(46,204,113,0.1); color: var(--success); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600;">REAL</span>' 
-                : '<span class="badge" style="background: rgba(231,76,60,0.1); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600;">FAKE</span>'}
+              ${log.status === 'MATCH' 
+                ? '<span class="badge" style="background: rgba(46,204,113,0.1); color: var(--success); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600;">MATCH</span>' 
+                : '<span class="badge" style="background: rgba(231,76,60,0.1); color: var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: 600;">UNMATCHED</span>'}
             </td>
           </tr>
         `).join('');

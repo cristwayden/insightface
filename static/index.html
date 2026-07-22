@@ -45,7 +45,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-value" style="color:var(--danger)" id="statFake">0</div>
-      <div class="stat-label">Spoofs Detected</div>
+      <div class="stat-label">Low Score / Unmatched</div>
     </div>
   </div>
 
@@ -270,7 +270,8 @@
           const face = data.faces[0];
           renderResult(face);
           addHistory(face);
-          if (!face.is_real) stats.fake++;
+          const isMatched = face.emp_id !== null && face.name !== 'Stranger';
+          if (!isMatched) stats.fake++;
           else stats.match++;
           updateStats();
         } else if (data.status === 'success') {
@@ -293,12 +294,12 @@
   function renderResult(face) {
     const pct   = Math.round(face.score * 100);
     const lvPct = Math.round(face.liveness_score * 100);
-    const isReal = face.is_real;
-    const cls    = isReal ? 'success' : 'danger';
-    const emoji  = isReal ? '✅' : '⚠️';
-    const badge  = isReal
-      ? '<span class="badge badge-real">🟢 Real Person</span>'
-      : '<span class="badge badge-fake">🔴 SPOOFING DETECTED</span>';
+    const isMatched = face.emp_id !== null && face.name !== 'Stranger';
+    const cls    = isMatched ? 'success' : 'danger';
+    const emoji  = isMatched ? '✅' : '⚠️';
+    const badge  = isMatched
+      ? '<span class="badge badge-real">🟢 MATCH SUCCESS</span>'
+      : '<span class="badge badge-fake">🔴 LOW MATCH SCORE</span>';
 
     const displayName = face.name;
 
@@ -311,19 +312,19 @@
       <div class="metrics">
         <div class="metric">
           <div class="metric-label">Match Score</div>
-          <div class="metric-value" style="color:${pct>=60?'var(--success)':'var(--warning)'}">${pct}%</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div class="metric-value" style="color:${isMatched?'var(--success)':'var(--danger)'}">${pct}%</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${isMatched?'var(--success)':'var(--danger)'}"></div></div>
         </div>
         <div class="metric">
           <div class="metric-label">Liveness</div>
-          <div class="metric-value" style="color:${isReal?'var(--success)':'var(--danger)'}">${lvPct}%</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${lvPct}%;background:${isReal?'var(--success)':'var(--danger)'}"></div></div>
+          <div class="metric-value" style="color:${face.is_real?'var(--success)':'var(--danger)'}">${lvPct}%</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${lvPct}%;background:${face.is_real?'var(--success)':'var(--danger)'}"></div></div>
         </div>
       </div>
     `;
 
     // Real bbox position from API
-    showFaceBox(displayName, isReal, face.bbox);
+    showFaceBox(displayName, isMatched, face.bbox);
   }
 
   function renderNoFace() {
@@ -393,9 +394,10 @@
     if (face) {
       displayName = face.name;
     }
+    const isMatched = face ? (face.emp_id !== null && face.name !== 'Stranger') : null;
     const item = face
-      ? { name: displayName, real: face.is_real, score: face.score, time: now() }
-      : { name: 'Not found', real: null, score: 0, time: now() };
+      ? { name: displayName, matched: isMatched, score: face.score, time: now() }
+      : { name: 'Not found', matched: null, score: 0, time: now() };
     historyItems.unshift(item);
     if (historyItems.length > 30) historyItems.pop();
     renderHistory();
@@ -407,13 +409,13 @@
       return;
     }
     historyEl.innerHTML = historyItems.map(h => {
-      const dotCls = h.real === null ? 'warn' : h.real ? 'ok' : 'fail';
+      const dotCls = h.matched === null ? 'warn' : h.matched ? 'ok' : 'fail';
       const pct    = Math.round(h.score * 100);
       return `
         <div class="log-item">
           <div class="log-dot ${dotCls}"></div>
           <div class="log-name">${escHtml(h.name)}</div>
-          ${h.real !== null ? `<span style="font-size:11px;color:var(--text-muted)">${pct}%</span>` : ''}
+          ${h.matched !== null ? `<span style="font-size:11px;color:var(--text-muted)">${pct}%</span>` : ''}
           <div class="log-time">${h.time}</div>
         </div>`;
     }).join('');
